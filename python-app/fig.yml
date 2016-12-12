@@ -1,0 +1,8 @@
+restapi:
+    build: .
+    ports:
+    - "8080:80"
+    environment:
+    - MODE=dev
+    volumes:
+    - .:/usr/src/app:ro
