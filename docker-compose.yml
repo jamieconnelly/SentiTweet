@@ -1,0 +1,26 @@
+version: '2'
+
+services:
+  web_data:
+    build: ./frontend
+
+  nginx:
+    build: ./nginx
+    volumes:
+      - ./frontend/src/public:/usr/local/nginx/html:ro
+    volumes_from:
+      - web_data
+    links:
+      - restapi
+    ports:
+      - "80:80"
+
+  restapi:
+    build: ./python-app
+    volumes:
+      - ./python-app:/usr/src/app:ro
+    environment:
+      - MODE=dev
+    ports:
+      - "5000:5000"
+  
