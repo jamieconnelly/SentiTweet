@@ -13,7 +13,7 @@ def query_sentiment():
         req_json = request.get_json()
 
         if req_json is None:
-            return jsonify(error='test')
+            return jsonify(error='testing')
 
     except Exception as ex:
         app.log.error(type(ex))

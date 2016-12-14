@@ -8,7 +8,7 @@ export default class Greeting extends React.Component {
   render() {
     return (  
       <div className='greeting'>
-        Hi!, {this.props.name}!
+        H!, {this.props.name}!
       </div>
     );
   }

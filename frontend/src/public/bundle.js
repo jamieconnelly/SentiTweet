@@ -56,7 +56,7 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	_react2.default.render(_react2.default.createElement(_greeting2.default, { name: 'there' }), document.body);
+	_react2.default.render(_react2.default.createElement(_greeting2.default, { name: 'thesss' }), document.body);
 
 /***/ },
 /* 1 */
@@ -19782,7 +19782,7 @@
 	      return _react2.default.createElement(
 	        'div',
 	        { className: 'greeting' },
-	        'Hi!, ',
+	        'H!, ',
 	        this.props.name,
 	        '!'
 	      );
