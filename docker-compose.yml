@@ -3,11 +3,11 @@ version: '2'
 services:
   web_data:
     build: ./frontend
+    volumes:
+      - ./frontend/public:/usr/local/nginx/html:ro
 
   nginx:
     build: ./nginx
-    volumes:
-      - ./frontend/src/public:/usr/local/nginx/html:ro
     volumes_from:
       - web_data
     links:

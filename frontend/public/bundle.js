@@ -50,13 +50,15 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _greeting = __webpack_require__(158);
+	var _reactDom = __webpack_require__(158);
 
-	var _greeting2 = _interopRequireDefault(_greeting);
+	var _app = __webpack_require__(159);
+
+	var _app2 = _interopRequireDefault(_app);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	_react2.default.render(_react2.default.createElement(_greeting2.default, { name: 'thesss' }), document.body);
+	(0, _reactDom.render)(_react2.default.createElement(_app2.default, null), document.getElementById('root'));
 
 /***/ },
 /* 1 */
@@ -19749,8 +19751,17 @@
 
 	'use strict';
 
+	module.exports = __webpack_require__(3);
+
+
+/***/ },
+/* 159 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+
 	Object.defineProperty(exports, "__esModule", {
-	  value: true
+	   value: true
 	});
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -19767,32 +19778,37 @@
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var Greeting = function (_React$Component) {
-	  _inherits(Greeting, _React$Component);
+	var App = function (_React$Component) {
+	   _inherits(App, _React$Component);
 
-	  function Greeting() {
-	    _classCallCheck(this, Greeting);
+	   function App() {
+	      _classCallCheck(this, App);
 
-	    return _possibleConstructorReturn(this, (Greeting.__proto__ || Object.getPrototypeOf(Greeting)).call(this));
-	  }
+	      return _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).apply(this, arguments));
+	   }
 
-	  _createClass(Greeting, [{
-	    key: 'render',
-	    value: function render() {
-	      return _react2.default.createElement(
-	        'div',
-	        { className: 'greeting' },
-	        'H!, ',
-	        this.props.name,
-	        '!'
-	      );
-	    }
-	  }]);
+	   _createClass(App, [{
+	      key: "render",
+	      value: function render() {
+	         return _react2.default.createElement(
+	            "div",
+	            null,
+	            _react2.default.createElement(
+	               "form",
+	               null,
+	               "Search terms:",
+	               _react2.default.createElement("input", { type: "text", name: "term" }),
+	               _react2.default.createElement("br", null),
+	               _react2.default.createElement("input", { type: "submit", value: "Submit" })
+	            )
+	         );
+	      }
+	   }]);
 
-	  return Greeting;
+	   return App;
 	}(_react2.default.Component);
 
-	exports.default = Greeting;
+	exports.default = App;
 
 /***/ }
 /******/ ]);

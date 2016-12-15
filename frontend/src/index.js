@@ -1,4 +1,8 @@
 import React from 'react';
-import Greeting from './greeting';
+import { render } from 'react-dom'
+import App from './components/app'
 
-React.render(<Greeting name='thesss'/>, document.body);
+render(
+  <App />,
+  document.getElementById('root')
+)

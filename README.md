@@ -1,2 +1,2 @@
-# SentiTweet
-Sentiment analysis of twitter data
+# SentiVis
+Sentiment analysis and visualisation of twitter data
