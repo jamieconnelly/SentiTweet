@@ -3,23 +3,32 @@ import logging
 from flask import Flask
 from flask import jsonify
 from flask import request
+from flask import make_response
 
 app = Flask(__name__)
 
 
-@app.route('/api', methods=['GET'])
+@app.route('/api', methods=['GET', 'POST'])
 def query_sentiment():
-    try:
-        req_json = request.get_json()
+    if request.method == 'POST':
+        try:
+            req = request.form['term']
+            resp = make_response('{"test": "ok"}')
+            resp.headers['Content-Type'] = "json"
+            return resp
 
-        if req_json is None:
-            return jsonify(error='testing')
+        except Exception as ex:
+            app.logger.error(type(ex))
+            app.logger.error(ex.args)
+            app.logger.error(ex)
+            return jsonify(error=str(ex))
 
-    except Exception as ex:
-        app.log.error(type(ex))
-        app.log.error(ex.args)
-        app.log.error(ex)
-        return jsonify(error=str(ex))
+    return jsonify(loaded='getted')
+
+
+@app.errorhandler(404)
+def page_not_found(error):
+    return 'This route does not exist {}'.format(request.url), 404
 
 if __name__ == '__main__':
     LOG_FORMAT = "'%(asctime)s - %(name)s - %(levelname)s - %(message)s'"

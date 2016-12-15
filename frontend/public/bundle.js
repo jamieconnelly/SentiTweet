@@ -19758,10 +19758,10 @@
 /* 159 */
 /***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
-	   value: true
+	  value: true
 	});
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -19779,33 +19779,75 @@
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
 	var App = function (_React$Component) {
-	   _inherits(App, _React$Component);
+	  _inherits(App, _React$Component);
 
-	   function App() {
-	      _classCallCheck(this, App);
+	  function App() {
+	    _classCallCheck(this, App);
 
-	      return _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).apply(this, arguments));
-	   }
+	    var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this));
 
-	   _createClass(App, [{
-	      key: "render",
-	      value: function render() {
-	         return _react2.default.createElement(
-	            "div",
-	            null,
-	            _react2.default.createElement(
-	               "form",
-	               null,
-	               "Search terms:",
-	               _react2.default.createElement("input", { type: "text", name: "term" }),
-	               _react2.default.createElement("br", null),
-	               _react2.default.createElement("input", { type: "submit", value: "Submit" })
-	            )
-	         );
-	      }
-	   }]);
+	    _this.state = {
+	      data: [],
+	      value: '',
+	      showResults: false,
+	      results: {}
+	    };
+	    _this.onChange = _this.onChange.bind(_this);
+	    _this.handleSubmit = _this.handleSubmit.bind(_this);
+	    return _this;
+	  }
 
-	   return App;
+	  _createClass(App, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      var _this2 = this;
+
+	      fetch('/api').then(function (res) {
+	        return res.json();
+	      }).then(function (res) {
+	        console.log('first get', res.loaded);
+	        return res;
+	      }).then(function (json) {
+	        return _this2.setState({ data: json.error });
+	      });
+	    }
+	  }, {
+	    key: 'onChange',
+	    value: function onChange(e) {
+	      this.setState({ value: e.target.value });
+	    }
+	  }, {
+	    key: 'handleSubmit',
+	    value: function handleSubmit() {
+	      var _this3 = this;
+
+	      var formData = new FormData();
+	      formData.append('term', this.state.value);
+
+	      fetch('/api', { method: 'POST', body: formData }).then(function (res) {
+	        return res.json();
+	      }).then(function (resJson) {
+	        _this3.setState({ results: resJson.test, showResults: true });
+	      }).catch(function (error) {
+	        return console.error(error);
+	      });
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        'Search terms:',
+	        _react2.default.createElement('input', { type: 'text', name: 'term', onChange: this.onChange }),
+	        _react2.default.createElement('br', null),
+	        _react2.default.createElement('input', { type: 'submit', value: 'Submit', onClick: this.handleSubmit }),
+	        this.state.showResults ? this.state.results : 'no'
+	      );
+	    }
+	  }]);
+
+	  return App;
 	}(_react2.default.Component);
 
 	exports.default = App;
