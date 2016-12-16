@@ -8,27 +8,18 @@ from flask import make_response
 app = Flask(__name__)
 
 
-@app.route('/api', methods=['GET', 'POST'])
+@app.route('/api', methods=['GET'])
 def query_sentiment():
-    if request.method == 'POST':
-        try:
-            req = request.form['term']
-            resp = make_response('{"test": "ok"}')
-            resp.headers['Content-Type'] = "json"
-            return resp
+    try:
+        term = request.args.getlist('term')
+        return jsonify(result=term)
 
-        except Exception as ex:
-            app.logger.error(type(ex))
-            app.logger.error(ex.args)
-            app.logger.error(ex)
-            return jsonify(error=str(ex))
+    except Exception as ex:
+        app.logger.error(type(ex))
+        app.logger.error(ex.args)
+        app.logger.error(ex)
+        return jsonify(error=str(ex))
 
-    return jsonify(loaded='getted')
-
-
-@app.errorhandler(404)
-def page_not_found(error):
-    return 'This route does not exist {}'.format(request.url), 404
 
 if __name__ == '__main__':
     LOG_FORMAT = "'%(asctime)s - %(name)s - %(levelname)s - %(message)s'"
