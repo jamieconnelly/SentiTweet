@@ -3,6 +3,7 @@ import logging
 from flask import Flask
 from flask import jsonify
 from flask import request
+from flask import make_response
 
 app = Flask(__name__)
 
@@ -10,16 +11,15 @@ app = Flask(__name__)
 @app.route('/api', methods=['GET'])
 def query_sentiment():
     try:
-        req_json = request.get_json()
-
-        if req_json is None:
-            return jsonify(error='testing')
+        term = request.args.getlist('term')
+        return jsonify(result=term)
 
     except Exception as ex:
-        app.log.error(type(ex))
-        app.log.error(ex.args)
-        app.log.error(ex)
+        app.logger.error(type(ex))
+        app.logger.error(ex.args)
+        app.logger.error(ex)
         return jsonify(error=str(ex))
+
 
 if __name__ == '__main__':
     LOG_FORMAT = "'%(asctime)s - %(name)s - %(levelname)s - %(message)s'"
