@@ -3,12 +3,11 @@ import logging
 from flask import Flask
 from flask import jsonify
 from flask import request
-from flask import make_response
 
 app = Flask(__name__)
 
 
-@app.route('/api', methods=['GET'])
+@app.route('/search', methods=['GET'])
 def query_sentiment():
     try:
         term = request.args.getlist('term')

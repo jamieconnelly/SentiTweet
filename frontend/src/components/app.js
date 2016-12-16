@@ -19,7 +19,7 @@ class App extends React.Component {
   	};
 
     handleSubmit() {
-		fetch(`/api?term=${this.state.term}`, {method: "GET"})
+		fetch(`/search?term=${this.state.term}`, {method: "GET"})
 		.then((res) => res.json())
       	.then((res) => this.setState({ resp: true, results: res.result }))
       	.catch((err) => console.error(err));
