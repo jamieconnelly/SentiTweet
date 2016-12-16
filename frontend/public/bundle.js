@@ -19810,7 +19810,7 @@
 	    value: function handleSubmit() {
 	      var _this2 = this;
 
-	      fetch('/api?term=' + this.state.term, { method: "GET" }).then(function (res) {
+	      fetch('/search?term=' + this.state.term, { method: "GET" }).then(function (res) {
 	        return res.json();
 	      }).then(function (res) {
 	        return _this2.setState({ resp: true, results: res.result });
