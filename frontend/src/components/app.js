@@ -8,7 +8,7 @@ class App extends React.Component {
         this.state = {
         	term: '',
         	resp: false,
-        	results: ''
+        	results: []
         };
         this.onChange = this.onChange.bind(this)
         this.handleSubmit = this.handleSubmit.bind(this)
@@ -29,14 +29,19 @@ class App extends React.Component {
 		return (
 		 <div>
 	  		<input className={styles.form}
-	  			   placeholder="Enter search term..." 
-	  			   type="text"
-	  			   onChange={this.onChange} />
+  	  			   placeholder="Enter search term..." 
+  	  			   type="text"
+  	  			   onChange={this.onChange} />
 	  		<input className={`${styles.primaryButton} ${styles.btndefault}`} 
-	  			   type="submit"
-	  			   value="Submit"
-	  			   onClick={this.handleSubmit} />
-	  		{this.state.resp ? <p>Results are: {this.state.results}</p> : null}
+  	  			   type="submit"
+  	  			   value="Submit"
+  	  			   onClick={this.handleSubmit} />
+	  		{this.state.resp ? 
+          <div>
+            No of tweets: {this.state.results.length}
+            {this.state.results.map(x => <ul><li>{x}</li></ul>)}
+          </div>
+        : null}
 		 </div>
 		);
    };
