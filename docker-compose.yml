@@ -16,9 +16,9 @@ services:
       - "80:80"
 
   restapi:
-    build: ./python-app
+    build: ./backend
     volumes:
-      - ./python-app:/usr/src/app:ro
+      - ./backend:/usr/src/app:ro
     environment:
       - MODE=dev
     ports:
