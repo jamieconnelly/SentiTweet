@@ -38,7 +38,7 @@ class App extends React.Component {
   	  			   onClick={this.handleSubmit} />
 	  		{this.state.resp ? 
           <div>
-            No of tweets: {this.state.results.length}
+            No of tweets is: {this.state.results.length}
             {this.state.results.map(x => <ul><li>{x},</li></ul>)}
           </div>
         : null}

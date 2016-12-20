@@ -1,8 +1,6 @@
 from flask import Flask, jsonify, request, g
 from tweepy import AppAuthHandler, Cursor, API
-from nltk.corpus import stopwords
-from nltk.tokenize import TweetTokenizer
-import string, re
+from utils.text_processor import NLTKPreprocessor
 
 app = Flask(__name__, instance_relative_config=True)
 app.config.from_object('config')
@@ -23,26 +21,16 @@ def get_twitter_api():
     return g.twitter_api
 
 
-def tweet_preprocessor(tweet):
-    tknzr = TweetTokenizer(preserve_case=True,
-                           reduce_len=True,
-                           strip_handles=True)
-    table = {ord(char): None for char in string.punctuation}
-    stop_words = stopwords.words('english')
-    remove_pun = tweet.translate(table)
-    remove_url = re.sub(r'http\S+', '', remove_pun)
-    return [w for w in tknzr.tokenize(remove_url) if w not in stop_words]
-
-
 @app.route('/search', methods=['GET'])
 def query_sentiment():
     try:
         term = request.args.getlist('term')
         api = get_twitter_api()
+        preprocessor = NLTKPreprocessor()
         tweets = []
         for tweet in Cursor(api.search, q=term, lang='en').items(100):
             if (not tweet.retweeted) and ('RT' not in tweet.text):
-                tokens = tweet_preprocessor(tweet.text.lower())
+                tokens = list(preprocessor.tokenize(tweet.text))
                 tweets.append(tokens)
         return jsonify(result=tweets)
 

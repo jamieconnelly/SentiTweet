@@ -3,3 +3,5 @@ gunicorn==19.6
 nltk==3.2.1
 tweepy==3.5.0
 numpy==1.12.0b1
+scipy==0.18.1
+scikit-learn==0.18.1
