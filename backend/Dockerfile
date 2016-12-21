@@ -1,10 +1,7 @@
 FROM python:2.7-onbuild
 
-RUN apt-get update
-# RUN apt-get -y install python-pip python-numpy python-scipy \
-#	python-matplotlib python-pandas python-sklearn python-nltk
-RUN apt-get -y install python-pip
-RUN pip install tweepy
+RUN python -m nltk.downloader stopwords wordnet maxent_treebank_pos_tagger punkt averaged_perceptron_tagger
+# RUN mkdir tokenizers
 
 EXPOSE 5000
 CMD ["gunicorn", "--config=gunicorn.py", "app:app"]
