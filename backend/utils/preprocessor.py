@@ -68,3 +68,7 @@ class Preprocessor(BaseEstimator, TransformerMixin):
         tag = {'N': wn.NOUN, 'V': wn.VERB,
                'R': wn.ADV, 'J': wn.ADJ}.get(tag[0], wn.NOUN)
         return self.lemmatizer.lemmatize(token, tag)
+
+
+def identity(arg):
+    return arg

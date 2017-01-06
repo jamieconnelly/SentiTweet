@@ -7,9 +7,9 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
 from sklearn.linear_model import SGDClassifier
 from sklearn.metrics import classification_report as clsr
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.cross_validation import train_test_split as tts
-from utils.preprocessor import Preprocessor
+from utils.preprocessor import Preprocessor, identity
 
 
 def timeit(func):
@@ -21,17 +21,9 @@ def timeit(func):
     return wrapper
 
 
-def identity(arg):
-    return arg
-
-
 @timeit
 def build_and_evaluate(X, y, classifier=SGDClassifier, outpath=None, verbose=True):
     """
-    Builds a classifer for the given list of documents and targets in two
-    stages: the first does a train/test split and prints a classifier report,
-    the second rebuilds the model on the entire corpus and returns it for
-    operationalization.
     X: a list or iterable of raw strings, each representing a document.
     y: a list or iterable of labels, which will be label encoded.
     Can specify the classifier to build with: if a class is specified then
@@ -45,11 +37,13 @@ def build_and_evaluate(X, y, classifier=SGDClassifier, outpath=None, verbose=Tru
     def build(classifier, X, y=None):
 
         if isinstance(classifier, type):
+            # classifier = classifier(loss='hinge', penalty='l2',
+            #                         alpha=1e-3, n_iter=5, random_state=42)
             classifier = classifier()
 
         model = Pipeline([
             ('preprocessor', Preprocessor()),
-            ('vectorizer', TfidfVectorizer(tokenizer=identity, preprocessor=None, lowercase=False)),
+            ('vectorizer', CountVectorizer(tokenizer=identity, ngram_range=(1, 2), preprocessor=None, lowercase=False)),
             ('classifier', classifier),
         ])
 
@@ -87,7 +81,7 @@ def build_and_evaluate(X, y, classifier=SGDClassifier, outpath=None, verbose=Tru
 
 
 if __name__ == "__main__":
-    PATH = "model.pickle"
+    PATH = "../model.pickle"
 
     X = []
     y = []

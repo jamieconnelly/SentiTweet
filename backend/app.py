@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request, g
 from tweepy import AppAuthHandler, Cursor, API
-from utils.text_processor import NLTKPreprocessor
+from utils.preprocessor import Preprocessor
+from utils.predict import predict
 
 app = Flask(__name__, instance_relative_config=True)
 app.config.from_object('config')
@@ -26,13 +27,21 @@ def query_sentiment():
     try:
         term = request.args.getlist('term')
         api = get_twitter_api()
-        preprocessor = NLTKPreprocessor()
+        preprocessor = Preprocessor()
+        tweet_tokens = []
         tweets = []
         for tweet in Cursor(api.search, q=term, lang='en').items(100):
             if (not tweet.retweeted) and ('RT' not in tweet.text):
                 tokens = list(preprocessor.tokenize(tweet.text))
-                tweets.append(tokens)
-        return jsonify(result=tweets)
+                tweet_tokens.append(tokens)
+                tweets.append(tweet.text)
+        results = predict(tweet_tokens)
+        dictionary = dict(zip(tweets, results))
+        dictlist = []
+        for key, item in dictionary.iteritems():
+            dictlist.append([key, item])
+
+        return jsonify(results=dictlist)
 
     except Exception as ex:
         app.logger.error(type(ex))
