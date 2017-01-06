@@ -8,7 +8,8 @@ class App extends React.Component {
         this.state = {
         	term: '',
         	resp: false,
-        	results: []
+        	results: [],
+          tweets: []
         };
         this.onChange = this.onChange.bind(this)
         this.handleSubmit = this.handleSubmit.bind(this)
@@ -21,7 +22,10 @@ class App extends React.Component {
     handleSubmit() {
 		fetch(`/search?term=${this.state.term}`, {method: "GET"})
 		.then((res) => res.json())
-      	.then((res) => this.setState({ resp: true, results: res.result }))
+      	.then((res) => 
+          this.setState({ resp: true,
+                          results: res.results,
+                        }))
       	.catch((err) => console.error(err));
     };
 
@@ -39,7 +43,7 @@ class App extends React.Component {
 	  		{this.state.resp ? 
           <div>
             No of tweets is: {this.state.results.length}
-            {this.state.results.map(x => <ul><li>{x},</li></ul>)}
+            {this.state.results.map(x => <ul><li>{x[0]}, {x[1] === 0 ? 'neg' : 'pos'}</li></ul>)}
           </div>
         : null}
 		 </div>
