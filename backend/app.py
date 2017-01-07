@@ -36,6 +36,7 @@ def query_sentiment():
                 tweet_tokens.append(tokens)
                 tweets.append(tweet.text)
         results = predict(tweet_tokens)
+        print results
         dictionary = dict(zip(tweets, results))
         dictlist = []
         for key, item in dictionary.iteritems():
