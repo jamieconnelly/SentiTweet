@@ -4,3 +4,4 @@ node_modules/
 instance/
 frontend/public/bundle.js
 backend/data/
+backend/model.pickle
