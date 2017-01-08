@@ -1,7 +1,7 @@
 import time
 import pickle
-
-from nltk.corpus import twitter_samples
+import numpy
+import pandas as p
 
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
@@ -22,23 +22,15 @@ def timeit(func):
 
 
 @timeit
-def build_and_evaluate(X, y, classifier=SGDClassifier, outpath=None, verbose=True):
-    """
-    X: a list or iterable of raw strings, each representing a document.
-    y: a list or iterable of labels, which will be label encoded.
-    Can specify the classifier to build with: if a class is specified then
-    this will build the model with the Scikit-Learn defaults, if an instance
-    is given, then it will be used directly in the build pipeline.
-    If outpath is given, this function will write the model as a pickle.
-    If verbose, this function will print out information to the command line.
-    """
+def build_and_evaluate(X, y,
+                       classifier=SGDClassifier, outpath=None):
+# def build_and_evaluate(X_train, y_train, X_test, y_test,
+#                        classifier=SGDClassifier, outpath=None):
 
     @timeit
-    def build(classifier, X, y=None):
+    def build(classifier, X, y):
 
         if isinstance(classifier, type):
-            # classifier = classifier(loss='hinge', penalty='l2',
-            #                         alpha=1e-3, n_iter=5, random_state=42)
             classifier = classifier()
 
         model = Pipeline([
@@ -51,30 +43,30 @@ def build_and_evaluate(X, y, classifier=SGDClassifier, outpath=None, verbose=Tru
         return model
 
     # Label encode the targets
-    labels = LabelEncoder()
-    y = labels.fit_transform(y)
+    labels_train = LabelEncoder()
+    y = labels_train.fit_transform(y)
+    # labels_test = LabelEncoder()
+    # y_test = labels_test.fit_transform(y_test)
 
     # Begin evaluation
-    if verbose: print("Building for evaluation")
+    print("Building for evaluation")
     X_train, X_test, y_train, y_test = tts(X, y, test_size=0.2)
     model, secs = build(classifier, X_train, y_train)
-
-    if verbose: print("Evaluation model fit in {:0.3f} seconds".format(secs))
-    if verbose: print("Classification Report:\n")
+    print("Evaluation model fit in {:0.3f} seconds".format(secs))
 
     y_pred = model.predict(X_test)
-    print(clsr(y_test, y_pred, target_names=labels.classes_))
+    print("Classification Report:\n")
+    print(clsr(y_test, y_pred, target_names=['neg', 'neut', 'pos']))
 
-    if verbose: print("Building complete model and saving ...")
-    model, secs = build(classifier, X, y)
-    model.labels_ = labels
+    print("Building complete model and saving...")
+    model, secs = build(classifier, X_train, y_train)
+    model.labels_ = labels_train
 
-    if verbose: print("Complete model fit in {:0.3f} seconds".format(secs))
+    print("Complete model fit in {:0.3f} seconds".format(secs))
 
     if outpath:
         with open(outpath, 'wb') as f:
             pickle.dump(model, f)
-
         print("Model written out to {}".format(outpath))
 
     return model
@@ -82,15 +74,17 @@ def build_and_evaluate(X, y, classifier=SGDClassifier, outpath=None, verbose=Tru
 
 if __name__ == "__main__":
     PATH = "../model.pickle"
+    TRAIN_PATH = '../data/training_data.csv'
+    TEST_PATH = '../data/test_data.csv'
 
-    X = []
-    y = []
-    for text in twitter_samples.strings('negative_tweets.json'):
-        X.append(text.encode("utf-8"))
-        y.append('neg')
-
-    for text in twitter_samples.strings('positive_tweets.json'):
-        X.append(text.encode("utf-8"))
-        y.append('pos')
-
-    model = build_and_evaluate(X, y, outpath=PATH)
+    train = p.read_csv(TRAIN_PATH, usecols=(['class', 'text']), encoding='latin-1')
+    test = p.read_csv(TEST_PATH, usecols=(['class', 'text']), encoding='latin-1')
+    train = train.reindex(numpy.random.permutation(train.index))
+    model = build_and_evaluate(train['text'].values,
+                               train['class'].values,
+                               outpath=PATH)
+    # model = build_and_evaluate(train['text'].values,
+    #                            train['class'].values,
+    #                            test['text'].values,
+    #                            test['class'].values,
+    #                            outpath=PATH)

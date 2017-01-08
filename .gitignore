@@ -3,3 +3,4 @@
 node_modules/
 instance/
 frontend/public/bundle.js
+backend/data/

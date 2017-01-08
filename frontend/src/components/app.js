@@ -43,7 +43,7 @@ class App extends React.Component {
 	  		{this.state.resp ? 
           <div>
             No of tweets is: {this.state.results.length}
-            {this.state.results.map(x => <ul><li>{x[0]}, {x[1] === 0 ? 'neg' : 'pos'}</li></ul>)}
+            {this.state.results.map(x => <ul><li>{x[0]}, {x[1]}</li></ul>)}
           </div>
         : null}
 		 </div>
