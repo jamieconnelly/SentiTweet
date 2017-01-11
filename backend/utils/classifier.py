@@ -2,59 +2,92 @@ import pickle
 import numpy
 import pandas as p
 
-from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
 from sklearn.linear_model import SGDClassifier
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report as clsr
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.cross_validation import train_test_split as tts
-from utils.preprocessor import Preprocessor, identity
+from sklearn.metrics import confusion_matrix as cm
+from utils.preprocessor import Preprocessor
 
 
-def build(X, y):
-    model = Pipeline([('preprocessor', Preprocessor()),
-                      ('vectorizer', CountVectorizer(tokenizer=identity,
-                                                     ngram_range=(1, 2),
-                                                     preprocessor=None,
-                                                     lowercase=False)),
-                      ('classifier', MultinomialNB())])
-    model.fit(X, y)
-    return model
+class FeatureCombiner(object):
+
+    def transform(self, X, caps_feat):
+        return numpy.c_[ X, numpy.array(caps_feat) ]
+
+    def fit(self, X, y=None):
+        return self
 
 
-def build_and_evaluate(X, y, outpath=None):
+def build_and_evaluate(X, y, X_test, y_test, outpath=None):
+
+    def preprocess(s):
+        return preprocessor.token(s)
 
     # Label encode the targets
     labels_train = LabelEncoder()
     y = labels_train.fit_transform(y)
+    labels_test = LabelEncoder()
+    y_test = labels_test.fit_transform(y_test)
 
-    # Begin evaluation
-    print("Building for evaluation")
-    X_train, X_test, y_train, y_test = tts(X, y, test_size=0.2)
-    model = build(X_train, y_train)
+    # Initialise transformers/estimators
+    preprocessor = Preprocessor()
+    clf = LogisticRegression()
+    feat_comb = FeatureCombiner()
+    vec = TfidfVectorizer(tokenizer=preprocess,
+                          lowercase=False,
+                          ngram_range=(1, 1),
+                          max_features=10000)
 
-    y_pred = model.predict(X_test)
+    # Build model
+    print("Building model")
+    tfidf_matrix = vec.fit_transform(X)
+    feat_matrix = feat_comb.transform(tfidf_matrix.todense(),
+                                      preprocessor.micro_feats['caps'])
+    clf.fit(feat_matrix, y)
+
+    # Evaluate on test set
+    preprocessor.reset_feats()
+    tfidf_matrix = vec.transform(X_test)
+    feat_matrix = feat_comb.transform(tfidf_matrix.todense(),
+                                      preprocessor.micro_feats['caps'])
+    y_pred = clf.predict(feat_matrix)
+
     print("Classification Report:\n")
+    print numpy.mean(y_pred == y_test)
+    print cm(y_test, y_pred)
     print(clsr(y_test, y_pred, target_names=['neg', 'neut', 'pos']))
 
+    # Rebuild model and save with pickle
     print("Building complete model and saving...")
-    model = build(X_train, y_train)
-    model.labels_ = labels_train
+    preprocessor.reset_feats()
+    tfidf_matrix = vec.transform(X)
+    feat_matrix = feat_comb.transform(tfidf_matrix.todense(),
+                                      preprocessor.micro_feats['caps'])
+    clf.fit(feat_matrix, y)
+    clf.labels_ = labels_train
 
     if outpath:
         with open(outpath, 'wb') as f:
-            pickle.dump(model, f)
+            pickle.dump(clf, f)
         print("Model written out to {}".format(outpath))
 
-    return model
+    return clf
 
 
 if __name__ == "__main__":
     PATH = "../model.pickle"
     TRAIN_PATH = '../data/training_data.csv'
-    train = p.read_csv(TRAIN_PATH, usecols=(['class', 'text']), encoding='latin-1')
+    TEST_PATH = '../data/test_data.csv'
+
+    train = p.read_csv(TRAIN_PATH, usecols=(['class', 'text']))
+    test = p.read_csv(TEST_PATH, usecols=(['class', 'text']))
     train = train.reindex(numpy.random.permutation(train.index))
+
     model = build_and_evaluate(train['text'].values,
                                train['class'].values,
+                               test['text'].values,
+                               test['class'].values,
                                outpath=PATH)

@@ -1,39 +1,31 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-import string
 import re
-import sys
+import htmlentitydefs
+import csv
 
 from nltk.corpus import stopwords as sw
-from nltk.corpus import wordnet as wn
-from nltk.tokenize import TweetTokenizer
-from nltk import WordNetLemmatizer
 from nltk import pos_tag
-from nltk.compat import python_2_unicode_compatible
-from sklearn.base import BaseEstimator, TransformerMixin
+import utils.regex as r
 
 
-@python_2_unicode_compatible
-class Preprocessor(BaseEstimator, TransformerMixin):
+class Preprocessor():
 
     def __init__(self):
         self.stopwords = sw.words('english')
-        self.punct = set(string.punctuation)
-        self.lemmatizer = WordNetLemmatizer()
         self.emoji_happy = self.emoji_happy()
         self.emoji_sad = self.emoji_sad()
-        self.tknzr = TweetTokenizer(preserve_case=True,
-                                    reduce_len=True,
-                                    strip_handles=True)
-        # sys.maxunicode == 0xffff
+        self.acrynoms = self.load_acrynoms()
+        self.micro_feats = {'caps': []}
 
-    def fit(self, X, y=None):
-        return self
+    def load_acrynoms(self):
+        with open('../data/acrynom.csv', 'rb') as f:
+            reader = csv.reader(f)
+            slang = dict((rows[0], rows[1]) for rows in reader)
+            return slang
 
-    def inverse_transform(self, X):
-        return X
-
-    def transform(self, X):
-        return [list(self.token(tweet)) for tweet in X]
+    def reset_feats(self):
+        self.micro_feats['caps'] = []
 
     def emoji_happy(self):
         try:
@@ -63,55 +55,104 @@ class Preprocessor(BaseEstimator, TransformerMixin):
                               u'\ud83d[\ude3e-\ude3f]'
                               ')+', re.UNICODE)
 
-    def emoji_patterns(self):
+    def normalise(self, tweet):
+        vect = []
+        caps = False
+        
+        for w in tweet:
+            # Check for uppercase intensifier
+            if not r.emoticon_re.search(w):
+              if w.upper() == w and not r.PUNCT_RE.match(w):
+                  caps = True
+
+        if caps:
+            self.micro_feats['caps'].append([1])
+        else:
+            self.micro_feats['caps'].append([0])
+
+        caps = False
+        
+        for w in tweet:
+            # Remove stopwords unless they are negative stopwords
+            if w in self.stopwords and not r.NEGATION_RE.match(w):
+                continue
+            # Preserve case of emoticons i.e. :D
+            if not r.emoticon_re.search(w):
+                w = w.lower()
+            # Replace repeated characters with 3 occurances
+            w = re.sub(r'(\w)\1{3,}', r'\1\1\1', w)
+            # Replace urls with _URL tag
+            w = re.sub(r'http\S+', '_URL', w)
+            # Replace hash with _HASH tag
+            w = re.sub(r'(?:\#+[\w_]+[\w\'_\-]*[\w_]+)', '_HASH', w)
+            # Replace user mentions with _USER tag
+            w = re.sub(r'(?:@[\w_]+)', '_USER', w)
+            vect.append(w)
+        # print self.micro_feats['all_caps']
+        return vect
+
+    def token(self, tweet):
+        # Try to ensure unicode:
         try:
-            return re.compile(u'['
-                              u'\U0001F300-\U0001F64F'
-                              u'\U0001F680-\U0001F6FF'
-                              u'\u2600-\u26FF\u2700-\u27BF]+',
-                              re.UNICODE)
-        except re.error:
-            return re.compile(u'('
-                              u'\ud83c[\udf00-\udfff]|'
-                              u'\ud83d[\udc00-\ude4f\ude80-\udeff]|'
-                              u'[\u2600-\u26FF\u2700-\u27BF])+',
-                              re.UNICODE)
+            tweet = unicode(tweet)
+        except UnicodeDecodeError:
+            tweet = str(tweet).encode('string_escape')
+            tweet = unicode(tweet)
+        # Fix HTML character entitites:
+        tweet = self.__html2unicode(tweet)
+        # Tokenise tweet
+        tweet = r.word_re.findall(tweet)
+        return self.normalise(tweet)
 
-    def token(self, tweet):  
-        tweet = self.emoji_happy.sub(r'happy', tweet)
-        tweet = self.emoji_sad.sub(r'sad', tweet)
-        result = []
+    def __html2unicode(self, s):
+        """
+        This function is curtosy of Christopher Potts
+        http://sentiment.christopherpotts.net/index.html
+        Internal metod that seeks to replace all the HTML entities in
+        s with their corresponding unicode characters.
+        """
+        # First the digits:
+        ents = set(r.html_entity_digit_re.findall(s))
+        if len(ents) > 0:
+            for ent in ents:
+                entnum = ent[2:-1]
+                try:
+                    entnum = int(entnum)
+                    s = s.replace(ent, unichr(entnum))
+                except:
+                    pass
+        # Now the alpha versions:
+        ents = set(r.html_entity_alpha_re.findall(s))
+        ents = filter((lambda x: x != r.amp), ents)
+        for ent in ents:
+            entname = ent[1:-1]
+            try:
+                s = s.replace(ent,unichr(htmlentitydefs.name2codepoint[entname]))
+            except:
+                pass
+            s = s.replace(r.amp, " and ")
+        return s
 
-        for token in self.tknzr.tokenize(tweet):
-            token = token.lower()
-            token = token.strip()
-            token = re.sub(r'http\S+', 'URL', token)
-            if token in self.stopwords or token in self.punct:
-                continue
-            result.append(token)
+# tweet = self.emoji_happy.sub(r'happy', tweet)
+# tweet = self.emoji_sad.sub(r'sad', tweet)
+# words = [w for segments in words for w in segments.split()]
+# lmtzr = WordNetLemmatizer()
+# lmtzr = SnowballStemmer("english")
+# words = [lmtzr.stem(w) for w in words]
+# for i, item in enumerate(results):
+#     rep = self.acrynoms.get(item.lower())
+#     if rep is not None:
+#         results[i] = ' _ABREV'
+# words = [w for segments in words for w in segments.split()]
+# results = [w for segments in results for w in segments.split()]
+# append_neg = False
+# if r.PUNCT_RE.match(w):
+    #     append_neg = False
 
-        return result
+    # if append_neg:
+    #     results.append(w + "_NEG")
+    # else:
+    #     results.append(w)
 
-    def tokenize(self, tweet):
-
-        for token, tag in pos_tag(self.tknzr.tokenize(tweet)):
-            token = token.lower()
-            token = token.strip()
-            token = token.translate(self.table)
-            token = re.sub(r'http\S+', 'URL', token)
-            token = self.emoji.sub(r'', token)
-
-            if token in self.stopwords or token in self.punct:
-                continue
-
-            lemma = self.lemmatize(token, tag)
-            yield lemma
-
-    def lemmatize(self, token, tag):
-        tag = {'N': wn.NOUN, 'V': wn.VERB,
-               'R': wn.ADV, 'J': wn.ADJ}.get(tag[0], wn.NOUN)
-        return self.lemmatizer.lemmatize(token, tag)
-
-
-def identity(arg):
-    return arg
+    # if r.NEGATION_RE.match(w):
+    #     append_neg = True
