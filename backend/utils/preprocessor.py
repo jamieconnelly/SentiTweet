@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from __future__ import unicode_literals, division
 import re
 import htmlentitydefs
 import csv
+import utils.regex as r
 
 from nltk.corpus import stopwords as sw
-import utils.regex as r
+from nltk import pos_tag
 
 
 class Preprocessor():
@@ -15,7 +16,20 @@ class Preprocessor():
         self.emoji_happy = self.emoji_happy()
         self.emoji_sad = self.emoji_sad()
         self.acrynoms = self.load_acrynoms()
-        self.micro_feats = {'caps': []}
+        self.pos_tags = None
+        self.feats = {'caps': [], 'reps': [], 'NNP': [], 'UH': [], 'NPS': [],
+                      'NP': [], 'NNS': [], 'PP': [], 'PP$': []}
+        self.word_re = r.word_re
+        self.emoticon_re = r.emoticon_re
+        self.html_entity_digit_re = r.html_entity_digit_re
+        self.html_entity_alpha_re = r.html_entity_alpha_re
+        self.amp = r.amp
+        self.punct_re = r.punct_re
+        self.negation_re = r.negation_re
+        self.url_re = r.url_re
+        self.rep_char_re = r.rep_char_re
+        self.hashtag_re = r.hashtag_re
+        self.user_tag_re = r.user_tag_re
 
     def load_acrynoms(self):
         with open('../data/acrynom.csv', 'rb') as f:
@@ -24,7 +38,102 @@ class Preprocessor():
             return slang
 
     def reset_feats(self):
-        self.micro_feats['caps'] = []
+        self.feats = {k: [] for k, v in self.feats.iteritems()}
+
+    def normalise_vect(self):
+        max_val = 0
+        for v in self.feats.itervalues():
+            temp = max(map(lambda x: x[0], v))
+            if temp > max_val:
+                max_val = temp
+
+        for k, v in self.feats.iteritems():
+            self.feats[k] = map(lambda x: [x[0]/max_val], v)
+
+    def normalise(self, tokens):
+        append_neg = False
+        
+        vect = []
+        for t in tokens:
+            if (t in self.stopwords and
+                    not self.negation_re.match(t)):
+                continue
+            if not self.emoticon_re.search(t):
+                t = t.lower()
+            t = self.rep_char_re.sub(r'\1', t)
+            t = self.url_re.sub('_URL', t)
+            t = self.hashtag_re.sub('_HASH', t)
+            t = self.user_tag_re.sub('_USER', t)
+            
+
+            # if r.punct_re.match(t):
+            #     append_neg = False
+            # if append_neg:
+            #     vect.append(t + "_NEG")
+            # else:
+            #     vect.append(t)
+            # if r.negation_re.match(t):
+            #     append_neg = True
+            vect.append(t)
+        return vect
+
+    def tokenise(self, tweet):
+        tweet = self.__html2unicode(tweet)
+        tokens = self.word_re.findall(tweet)
+        self.pos_tags_count(tokens)
+        self.caps_intensifier(tokens)
+        self.char_repititions(tokens)
+        return self.normalise(tokens)
+
+    def pos_tags_count(self, tokens):
+        useful_tags = ['NNP', 'NP', 'UH', 'NPS', 'NNS', 'PP', 'PP$']
+
+        for tag in useful_tags:
+            self.feats[tag].append([0])
+
+        tags = pos_tag(tokens)
+        idx = len(self.feats['NP']) - 1
+
+        for tag in tags:
+            if tag[1] in useful_tags:
+                self.feats[tag[1]][idx][0] += 1
+
+    def append_binary_feats(self, intensify, feat):
+        if intensify:
+            self.feats[feat].append([1])
+        else:
+            self.feats[feat].append([0])
+
+    def char_repititions(self, tokens):
+        reps = any(self.rep_char_re.search(word) for word in tokens)
+        self.append_binary_feats(reps, 'reps')
+
+    def caps_intensifier(self, tokens):
+        caps = any(self.word_has_all_caps(word) for word in tokens)
+        self.append_binary_feats(caps, 'caps')
+
+    def word_has_all_caps(self, token):
+        if (self.emoticon_re.search(token)
+            or self.punct_re.match(token)
+                or self.has_num(token)):
+            return False
+
+        if (token.upper() == token
+            and (token != 'I'
+                 and token != 'A')):
+            return True
+
+        return False
+
+    def has_num(self, s):
+        return any(i.isdigit() for i in s)
+
+    def ensure_unicode(self, tweet):
+        try:
+            return unicode(tweet)
+        except UnicodeDecodeError:
+            tweet = str(tweet).encode('string_escape')
+            return unicode(tweet)
 
     def emoji_happy(self):
         try:
@@ -54,55 +163,6 @@ class Preprocessor():
                               u'\ud83d[\ude3e-\ude3f]'
                               ')+', re.UNICODE)
 
-    def normalise(self, tweet):
-        vect = []
-        caps = False
-        
-        for w in tweet:
-            # Check for uppercase intensifier
-            if not r.emoticon_re.search(w):
-              if w.upper() == w and not r.PUNCT_RE.match(w):
-                  caps = True
-
-        if caps:
-            self.micro_feats['caps'].append([1])
-        else:
-            self.micro_feats['caps'].append([0])
-
-        caps = False
-        
-        for w in tweet:
-            # Remove stopwords unless they are negative stopwords
-            if w in self.stopwords and not r.NEGATION_RE.match(w):
-                continue
-            # Preserve case of emoticons i.e. :D
-            if not r.emoticon_re.search(w):
-                w = w.lower()
-            # Replace repeated characters with 3 occurances
-            w = re.sub(r'(\w)\1{3,}', r'\1\1\1', w)
-            # Replace urls with _URL tag
-            w = re.sub(r'http\S+', '_URL', w)
-            # Replace hash with _HASH tag
-            w = re.sub(r'(?:\#+[\w_]+[\w\'_\-]*[\w_]+)', '_HASH', w)
-            # Replace user mentions with _USER tag
-            w = re.sub(r'(?:@[\w_]+)', '_USER', w)
-            vect.append(w)
-        # print self.micro_feats['all_caps']
-        return vect
-
-    def token(self, tweet):
-        # Try to ensure unicode:
-        try:
-            tweet = unicode(tweet)
-        except UnicodeDecodeError:
-            tweet = str(tweet).encode('string_escape')
-            tweet = unicode(tweet)
-        # Fix HTML character entitites:
-        tweet = self.__html2unicode(tweet)
-        # Tokenise tweet
-        tweet = r.word_re.findall(tweet)
-        return self.normalise(tweet)
-
     def __html2unicode(self, s):
         """
         This function is curtosy of Christopher Potts
@@ -111,7 +171,7 @@ class Preprocessor():
         s with their corresponding unicode characters.
         """
         # First the digits:
-        ents = set(r.html_entity_digit_re.findall(s))
+        ents = set(self.html_entity_digit_re.findall(s))
         if len(ents) > 0:
             for ent in ents:
                 entnum = ent[2:-1]
@@ -121,15 +181,16 @@ class Preprocessor():
                 except:
                     pass
         # Now the alpha versions:
-        ents = set(r.html_entity_alpha_re.findall(s))
+        ents = set(self.html_entity_alpha_re.findall(s))
         ents = filter((lambda x: x != r.amp), ents)
         for ent in ents:
             entname = ent[1:-1]
             try:
-                s = s.replace(ent,unichr(htmlentitydefs.name2codepoint[entname]))
+                s = s.replace(ent,
+                              unichr(htmlentitydefs.name2codepoint[entname]))
             except:
                 pass
-            s = s.replace(r.amp, " and ")
+            s = s.replace(self.amp, " and ")
         return s
 
 # tweet = self.emoji_happy.sub(r'happy', tweet)

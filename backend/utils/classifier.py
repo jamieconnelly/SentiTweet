@@ -1,5 +1,5 @@
 import pickle
-import numpy
+import numpy as np
 import pandas as p
 
 from sklearn.preprocessing import LabelEncoder
@@ -14,8 +14,12 @@ from utils.preprocessor import Preprocessor
 
 class FeatureCombiner(object):
 
-    def transform(self, X, caps_feat):
-        return numpy.c_[ X, numpy.array(caps_feat) ]
+    def transform(self, X, pre):
+        pre.normalise_vect()
+        feats = X
+        for k, v in pre.feats.iteritems():
+            feats = np.c_[feats, np.array(v)]
+        return feats
 
     def fit(self, X, y=None):
         return self
@@ -24,7 +28,7 @@ class FeatureCombiner(object):
 def build_and_evaluate(X, y, X_test, y_test, outpath=None):
 
     def preprocess(s):
-        return preprocessor.token(s)
+        return preprocessor.tokenise(s)
 
     # Label encode the targets
     labels_train = LabelEncoder()
@@ -33,30 +37,32 @@ def build_and_evaluate(X, y, X_test, y_test, outpath=None):
     y_test = labels_test.fit_transform(y_test)
 
     # Initialise transformers/estimators
-    preprocessor = Preprocessor()
+    # clf = MultinomialNB()
+    # clf = SGDClassifier()
     clf = LogisticRegression()
+    preprocessor = Preprocessor()
     feat_comb = FeatureCombiner()
     vec = TfidfVectorizer(tokenizer=preprocess,
                           lowercase=False,
                           ngram_range=(1, 1),
-                          max_features=10000)
+                          max_features=5000)
 
     # Build model
     print("Building model")
     tfidf_matrix = vec.fit_transform(X)
     feat_matrix = feat_comb.transform(tfidf_matrix.todense(),
-                                      preprocessor.micro_feats['caps'])
+                                      preprocessor)
     clf.fit(feat_matrix, y)
 
     # Evaluate on test set
     preprocessor.reset_feats()
     tfidf_matrix = vec.transform(X_test)
     feat_matrix = feat_comb.transform(tfidf_matrix.todense(),
-                                      preprocessor.micro_feats['caps'])
+                                      preprocessor)
     y_pred = clf.predict(feat_matrix)
 
     print("Classification Report:\n")
-    print numpy.mean(y_pred == y_test)
+    print np.mean(y_pred == y_test)
     print cm(y_test, y_pred)
     print(clsr(y_test, y_pred, target_names=['neg', 'neut', 'pos']))
 
@@ -65,7 +71,7 @@ def build_and_evaluate(X, y, X_test, y_test, outpath=None):
     preprocessor.reset_feats()
     tfidf_matrix = vec.transform(X)
     feat_matrix = feat_comb.transform(tfidf_matrix.todense(),
-                                      preprocessor.micro_feats['caps'])
+                                      preprocessor)
     clf.fit(feat_matrix, y)
     clf.labels_ = labels_train
 
@@ -84,7 +90,7 @@ if __name__ == "__main__":
 
     train = p.read_csv(TRAIN_PATH, usecols=(['class', 'text']))
     test = p.read_csv(TEST_PATH, usecols=(['class', 'text']))
-    train = train.reindex(numpy.random.permutation(train.index))
+    train = train.reindex(np.random.permutation(train.index))
 
     model = build_and_evaluate(train['text'].values,
                                train['class'].values,
