@@ -5,7 +5,6 @@ import htmlentitydefs
 import csv
 
 from nltk.corpus import stopwords as sw
-from nltk import pos_tag
 import utils.regex as r
 
 
