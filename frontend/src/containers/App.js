@@ -1,6 +1,7 @@
 import React from 'react'
 import NavbarInstance from '../components/Navbar.js'
 import Results from '../components/Results.js'
+import HeatMap from '../components/HeatMap.js'
 
 class App extends React.Component {
 
@@ -31,6 +32,7 @@ class App extends React.Component {
         <div>
           <NavbarInstance onChange={this.onChange} handleSubmit={this.handleSubmit} />
           {this.state.resp ? <Results tweets={this.state.tweets}/> : null}
+          <HeatMap />
         </div>
   		);
    };
