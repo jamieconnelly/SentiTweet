@@ -10,19 +10,7 @@ from sklearn.metrics import classification_report as clsr
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.metrics import confusion_matrix as cm
 from utils.preprocessor import Preprocessor
-
-
-class FeatureCombiner(object):
-
-    def transform(self, X, pre):
-        pre.normalise_vect()
-        feats = X
-        for k, v in pre.feats.iteritems():
-            feats = np.c_[feats, np.array(v)]
-        return feats
-
-    def fit(self, X, y=None):
-        return self
+from utils.feature_combiner import FeatureCombiner
 
 
 def build_and_evaluate(X, y, X_test, y_test, outpath=None):

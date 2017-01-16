@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from __future__ import unicode_literals, division
 import re
 import htmlentitydefs
@@ -15,7 +14,7 @@ class Preprocessor():
         self.stopwords = sw.words('english')
         self.emoji_happy = self.emoji_happy()
         self.emoji_sad = self.emoji_sad()
-        self.acrynoms = self.load_acrynoms()
+        # self.acrynoms = self.load_acrynoms()
         self.pos_tags = None
         self.feats = {'caps': [], 'reps': [], 'NNP': [], 'UH': [], 'NPS': [],
                       'NP': [], 'NNS': [], 'PP': [], 'PP$': []}
