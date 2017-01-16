@@ -1,5 +1,8 @@
 import pickle
-from utils.preprocessor import Preprocessor, identity
+
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from utils.preprocessor import Preprocessor
+from utils.feature_combiner import FeatureCombiner
 
 
 def open_model():
@@ -10,9 +13,20 @@ def open_model():
 
 
 def predict(tweets):
+
+    def preprocess(s):
+        return preprocessor.tokenise(s)
+
     model = open_model()
-    vectorizer = model.named_steps['vectorizer']
-    classifier = model.named_steps['classifier']
-    X_new = vectorizer.transform(tweets)
-    X_new_preds = classifier.predict(X_new)
+    preprocessor = Preprocessor()
+    feat_comb = FeatureCombiner()
+    vec = TfidfVectorizer(tokenizer=preprocess,
+                          lowercase=False,
+                          ngram_range=(1, 1),
+                          max_features=5000)
+    
+    tfidf_matrix = vec.transform(tweets)
+    feat_matrix = feat_comb.transform(tfidf_matrix.todense(),
+                                      preprocessor)
+    X_new_preds = model.predict(feat_matrix)
     return X_new_preds.tolist()
