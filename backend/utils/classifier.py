@@ -1,8 +1,7 @@
-import pickle
+import pickle, json
 import numpy as np
 import pandas as p
 
-from sklearn.preprocessing import LabelEncoder
 from sklearn.linear_model import SGDClassifier
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
@@ -18,12 +17,6 @@ def build_and_evaluate(X, y, X_test, y_test, outpath=None):
     def preprocess(s):
         return preprocessor.tokenise(s)
 
-    # Label encode the targets
-    labels_train = LabelEncoder()
-    y = labels_train.fit_transform(y)
-    labels_test = LabelEncoder()
-    y_test = labels_test.fit_transform(y_test)
-
     # Initialise transformers/estimators
     # clf = MultinomialNB()
     # clf = SGDClassifier()
@@ -33,7 +26,8 @@ def build_and_evaluate(X, y, X_test, y_test, outpath=None):
     vec = TfidfVectorizer(tokenizer=preprocess,
                           lowercase=False,
                           ngram_range=(1, 1),
-                          max_features=5000)
+                          max_features=5000,
+                          norm='l2')
 
     # Build model
     print("Building model")
@@ -57,11 +51,15 @@ def build_and_evaluate(X, y, X_test, y_test, outpath=None):
     # Rebuild model and save with pickle
     print("Building complete model and saving...")
     preprocessor.reset_feats()
-    tfidf_matrix = vec.transform(X)
+    tfidf_matrix = vec.fit_transform(X)
     feat_matrix = feat_comb.transform(tfidf_matrix.todense(),
                                       preprocessor)
     clf.fit(feat_matrix, y)
-    clf.labels_ = labels_train
+    
+    np.set_printoptions(threshold=np.nan)
+    print repr(vec.idf_)
+
+    json.dump(vec.vocabulary_, open('../vocabulary.json', mode = 'wb'))
 
     if outpath:
         with open(outpath, 'wb') as f:
@@ -73,8 +71,8 @@ def build_and_evaluate(X, y, X_test, y_test, outpath=None):
 
 if __name__ == "__main__":
     PATH = "../model.pickle"
-    TRAIN_PATH = '../data/training_data.csv'
-    TEST_PATH = '../data/test_data.csv'
+    TRAIN_PATH = '../data/training_data1.csv'
+    TEST_PATH = '../data/test_data1.csv'
 
     train = p.read_csv(TRAIN_PATH, usecols=(['class', 'text']))
     test = p.read_csv(TEST_PATH, usecols=(['class', 'text']))
