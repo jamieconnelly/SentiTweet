@@ -5,8 +5,11 @@ class Results extends React.Component {
   render() {
     return (
       <div>
-        No of tweets is: {this.props.tweets.length}
-        {this.props.tweets.map(x => <ul><li>{x}</li></ul>)}
+        <p className="muted" style={{ marginBottom: 10 }}> 
+        No of tweets is: {this.props.tweets.length} 
+        Neg: {this.props.neg}%
+        Pos: {this.props.pos}% 
+        </p>
       </div>
     );
   }
