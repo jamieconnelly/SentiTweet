@@ -2,10 +2,11 @@ import pickle
 import json
 import scipy.sparse as sp
 
+from flask import current_app as app
 from sklearn.feature_extraction.text import TfidfVectorizer
-from utils.preprocessor import Preprocessor
-from utils.feature_combiner import FeatureCombiner
-from idfs import idfs
+from app.utils.preprocessor import Preprocessor
+from app.utils.feature_combiner import FeatureCombiner
+from app.utils.idfs import idfs
 
 
 class MyVectorizer(TfidfVectorizer):
@@ -14,9 +15,9 @@ class MyVectorizer(TfidfVectorizer):
 
 def open_model():
     model = None
-    vocab = json.load(open('vocabulary.json', mode='rb'))
+    vocab = json.load(open(app.root_path + '/vocabulary.json', mode='rb'))
 
-    with open('model.pickle', 'rb') as f:
+    with open(app.root_path + '/model.pickle', 'rb') as f:
         model = pickle.load(f)
 
     return model, vocab
@@ -36,7 +37,7 @@ def get_vec(preprocess, vocabulary):
 def predict(tweets):
     def preprocess(s):
         return preprocessor.tokenise(s)
-
+    
     model, vocabulary = open_model()
     preprocessor = Preprocessor()
     feat_comb = FeatureCombiner()

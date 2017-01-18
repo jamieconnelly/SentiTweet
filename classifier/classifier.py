@@ -1,4 +1,5 @@
-import pickle, json
+import pickle
+import json
 import numpy as np
 import pandas as p
 
@@ -6,10 +7,10 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report as clsr
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import confusion_matrix as cm
-from utils.preprocessor import Preprocessor
-from utils.feature_combiner import FeatureCombiner
+from SentiVis.sentiment_webservice.app.utils.preprocessor import Preprocessor
+from SentiVis.sentiment_webservice.app.utils.feature_combiner import FeatureCombiner
 
 
 def build_and_evaluate(X, y, X_test, y_test, outpath=None):
@@ -55,14 +56,13 @@ def build_and_evaluate(X, y, X_test, y_test, outpath=None):
     feat_matrix = feat_comb.transform(tfidf_matrix.todense(),
                                       preprocessor)
     clf.fit(feat_matrix, y)
-    
-    np.set_printoptions(threshold=np.nan)
-    print repr(vec.idf_)
 
-    json.dump(vec.vocabulary_, open('../vocabulary.json', mode = 'wb'))
+    # np.set_printoptions(threshold=np.nan)
+    # print repr(vec.idf_)
 
     if outpath:
-        with open(outpath, 'wb') as f:
+        json.dump(vec.vocabulary_, open(outpath + 'vocabulary.json', mode='wb'))
+        with open(outpath + 'model.pickle', 'wb') as f:
             pickle.dump(clf, f)
         print("Model written out to {}".format(outpath))
 
@@ -70,9 +70,9 @@ def build_and_evaluate(X, y, X_test, y_test, outpath=None):
 
 
 if __name__ == "__main__":
-    PATH = "../model.pickle"
-    TRAIN_PATH = '../data/training_data1.csv'
-    TEST_PATH = '../data/test_data1.csv'
+    PATH = '../sentiment_webservice/app/'
+    TRAIN_PATH = './data/training_data1.csv'
+    TEST_PATH = './data/test_data1.csv'
 
     train = p.read_csv(TRAIN_PATH, usecols=(['class', 'text']))
     test = p.read_csv(TEST_PATH, usecols=(['class', 'text']))

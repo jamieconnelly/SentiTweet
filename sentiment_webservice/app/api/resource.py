@@ -1,11 +1,9 @@
 from __future__ import division
-from flask import Flask, jsonify, request, g
+from app.api import api
+from flask import jsonify, request, g
+from flask import current_app as app
 from tweepy import AppAuthHandler, Cursor, API
-from utils.predict import predict
-
-app = Flask(__name__, instance_relative_config=True)
-app.config.from_object('config')
-app.config.from_pyfile('config.py')
+from app.utils.predict import predict
 
 
 def connect_twitter():
@@ -28,12 +26,12 @@ def calculate_percent(label):
     return round(((label / 50) * 100), 2)
 
 
-@app.route('/', methods=['GET'])
+@api.route('/', methods=['GET'])
 def home():
     return 'welcome'
 
 
-@app.route('/search', methods=['GET'])
+@api.route('/search', methods=['GET'])
 def query_sentiment():
     try:
         term = request.args.getlist('term')
