@@ -6,7 +6,7 @@ class Results extends React.Component {
     return (
       <div>
         <p style={{ marginLeft: '10%', marginBottom: 15 }}>
-        Neutral: {this.props.neg}%,
+        Neutral: {this.props.neut}%,
         Negative: {this.props.neg}%,
         Positive: {this.props.pos}% 
         </p>

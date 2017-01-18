@@ -26,9 +26,9 @@ class App extends React.Component {
   		fetch(`/search?term=${this.state.term}`, {method: "GET"})
   		  .then((res) => res.json())
         .then((res) => this.setState({ tweets: res.tweets,
-                                       pos: res.pos,
-                                       neg: res.neg,
-                                       neut: res.neut}))
+                                       pos: res.pos || 0,
+                                       neg: res.neg || 0,
+                                       neut: res.neut || 0}))
         .catch((err) => console.error(err));
     };
 
