@@ -94,6 +94,6 @@ node_modules/
 instance/
 frontend/public/bundle.js
 */data/
-model.pickle
-sentiment_webservice/app/vocabulary.json
+./sentiment_webservice/app/model.pickle
+./sentiment_webservice/app/vocabulary.json
 */settings.py

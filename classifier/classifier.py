@@ -35,14 +35,14 @@ def build_and_evaluate(X, y, X_test, y_test, outpath=None):
     tfidf_matrix = vec.fit_transform(X)
     feat_matrix = feat_comb.transform(tfidf_matrix.todense(),
                                       preprocessor)
-    clf.fit(feat_matrix, y)
+    clf.fit(tfidf_matrix, y)
 
     # Evaluate on test set
     preprocessor.reset_feats()
     tfidf_matrix = vec.transform(X_test)
     feat_matrix = feat_comb.transform(tfidf_matrix.todense(),
                                       preprocessor)
-    y_pred = clf.predict(feat_matrix)
+    y_pred = clf.predict(tfidf_matrix)
 
     print("Classification Report:\n")
     print np.mean(y_pred == y_test)
@@ -71,11 +71,11 @@ def build_and_evaluate(X, y, X_test, y_test, outpath=None):
 
 if __name__ == "__main__":
     PATH = '../sentiment_webservice/app/'
-    TRAIN_PATH = './data/training_data1.csv'
-    TEST_PATH = './data/test_data1.csv'
+    TRAIN_PATH = './data/training_data.csv'
+    TEST_PATH = './data/test_data.csv'
 
-    train = p.read_csv(TRAIN_PATH, usecols=(['class', 'text']))
-    test = p.read_csv(TEST_PATH, usecols=(['class', 'text']))
+    train = p.read_csv(TRAIN_PATH, usecols=(['class', 'text'])).dropna()
+    test = p.read_csv(TEST_PATH, usecols=(['class', 'text'])).dropna()
     train = train.reindex(np.random.permutation(train.index))
 
     model = build_and_evaluate(train['text'].values,
