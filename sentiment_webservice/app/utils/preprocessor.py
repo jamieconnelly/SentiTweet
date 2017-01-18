@@ -2,7 +2,7 @@ from __future__ import unicode_literals, division
 import re
 import htmlentitydefs
 import csv
-import utils.regex as r
+import app.utils.regex as r
 
 from nltk.corpus import stopwords as sw
 from nltk import pos_tag
@@ -47,7 +47,7 @@ class Preprocessor():
                 max_val = temp
 
         for k, v in self.feats.iteritems():
-            self.feats[k] = map(lambda x: 0 if x[0] == 0 else [x[0]/max_val], v)
+            self.feats[k] = map(lambda x: [0] if x[0] == 0 else [x[0]/max_val], v)
 
     def normalise(self, tokens):
         append_neg = False

@@ -1,5 +1,5 @@
 from __future__ import division
-from utils.preprocessor import Preprocessor
+from app.utils.preprocessor import Preprocessor
 import unittest
 
 

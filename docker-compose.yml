@@ -16,11 +16,12 @@ services:
       - "80:80"
 
   restapi:
-    build: ./backend
+    restart: always
+    build: ./sentiment_webservice
     volumes:
-      - ./backend:/usr/src/app:ro
-    environment:
-      - MODE=dev
+      - ./sentiment_webservice:/usr/src/app
+    expose:
+      - "5000"
     ports:
       - "5000:5000"
   

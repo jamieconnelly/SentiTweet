@@ -1,4 +1,4 @@
-from utils.classifier import FeatureCombiner
+from app.utils.classifier import FeatureCombiner
 import numpy as np
 import unittest
 
