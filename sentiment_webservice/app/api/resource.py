@@ -36,21 +36,25 @@ def query_sentiment():
     try:
         term = request.args.getlist('term')
         api = get_twitter_api()
-        response = {'tweets': [], 'pos': 0, 'neg': 0}
-        pos, neg = 0, 0
+        res = {'tweets': [], 'pos': 0, 'neg': 0, 'neut': 0}
+        pos, neg, neut = 0, 0, 0
 
         for tweet in Cursor(api.search, q=term, lang='en').items(50):
-            response['tweets'].append(tweet.text)
             pred = predict([tweet.text])
+            res['tweets'].append({'text': tweet.text,
+                                  'location': tweet.user.location})
             if pred == [0]:
                 neg += 1
+            elif pred == [2]:
+                neut += 1
             else:
                 pos += 1
 
-        response['neg'] = calculate_percent(neg)
-        response['pos'] = calculate_percent(pos)
+        res['neg'] = calculate_percent(neg)
+        res['pos'] = calculate_percent(pos)
+        res['neut'] = calculate_percent(neut)
 
-        return jsonify(**response)
+        return jsonify(**res)
 
     except Exception as ex:
         app.logger.error(type(ex))
