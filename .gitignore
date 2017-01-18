@@ -91,9 +91,9 @@ ENV/
 .DS_Store
 *.pyc
 node_modules/
-instance/
 frontend/public/bundle.js
 */data/
 model.pickle
-sentiment_webservice/app/vocabulary.json
-*/settings.py
+vocabulary.json
+settings.py
+uwsgi.pid

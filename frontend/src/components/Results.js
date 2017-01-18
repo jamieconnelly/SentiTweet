@@ -5,10 +5,10 @@ class Results extends React.Component {
   render() {
     return (
       <div>
-        <p className="muted" style={{ marginBottom: 10 }}> 
-        No of tweets is: {this.props.tweets.length} 
-        Neg: {this.props.neg}%
-        Pos: {this.props.pos}% 
+        <p style={{ marginLeft: '10%', marginBottom: 15 }}>
+        Neutral: {this.props.neut}%,
+        Negative: {this.props.neg}%,
+        Positive: {this.props.pos}% 
         </p>
       </div>
     );
