@@ -10,3 +10,4 @@ numpy==1.12.0b1
 scipy==0.18.1
 scikit-learn==0.18.1
 pandas==0.19.2
+googlemaps==2.4.5
