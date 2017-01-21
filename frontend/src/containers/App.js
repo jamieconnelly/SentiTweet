@@ -9,6 +9,7 @@ class App extends React.Component {
     	super();
         this.state = {
         	term: '',
+          loaded: true,
         	tweets: [],
           pos: 0,
           neg: 0,
@@ -23,12 +24,14 @@ class App extends React.Component {
   	};
 
     handleSubmit() {
+      this.setState({loaded: false})
   		fetch(`/search?term=${this.state.term}`, {method: "GET"})
   		  .then((res) => res.json())
         .then((res) => this.setState({ tweets: res.tweets,
+                                       loaded: true,
                                        pos: res.pos || 0,
                                        neg: res.neg || 0,
-                                       neut: res.neut || 0}))
+                                       neut: res.neut || 0 }))
         .catch((err) => console.error(err));
     };
 
@@ -36,11 +39,8 @@ class App extends React.Component {
   		return (
         <div>
           <NavbarInstance onChange={this.onChange} handleSubmit={this.handleSubmit} />
-          <Results tweets={this.state.tweets}
-                   pos={this.state.pos}
-                   neg={this.state.neg} 
-                   neut={this.state.neut} />
-          <HeatMap />
+          <Results {...this.state} />
+          <HeatMap tweets={this.state.tweets} loaded={this.state.loaded}/>
         </div>
   		);
    };
