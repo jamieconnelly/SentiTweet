@@ -60,7 +60,7 @@ class HeatMap extends Component {
 
   render() {
     return (
-      <Map center={mapCenter} zoom={zoomLevel}>
+      <Map center={mapCenter} zoom={zoomLevel} worldCopyJump={true}>
         {this.props.loaded ? this.getMapTiles() : this.getLoader()}
       </Map>
     );
