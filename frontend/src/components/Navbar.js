@@ -2,6 +2,7 @@ import React from 'react'
 import { Navbar, FormGroup, FormControl, Button } from 'react-bootstrap';
 
 class NavbarInstance extends React.Component {
+
   render() {
     return (
       <Navbar>
@@ -11,7 +12,10 @@ class NavbarInstance extends React.Component {
         </Navbar.Header>
         <Navbar.Collapse>
           <Navbar.Form pullLeft>
-            <FormControl onChange={this.props.onChange} type="text" placeholder="Enter search term..." />
+            <FormControl onChange={this.props.onChange}
+                         onKeyPress={this.props.handleKeyPress}
+                         type="text"
+                         placeholder="Enter search term..." />
             <Button onClick={this.props.handleSubmit} type="submit">Submit</Button>
           </Navbar.Form>
         </Navbar.Collapse>

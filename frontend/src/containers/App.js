@@ -17,11 +17,18 @@ class App extends React.Component {
         };
         this.onChange = this.onChange.bind(this)
         this.handleSubmit = this.handleSubmit.bind(this)
+        this.handleKeyPress = this.handleKeyPress.bind(this)
     };
 
     onChange(e) {
     	this.setState({term: e.target.value});
   	};
+
+    handleKeyPress(target) {
+      if(target.charCode == 13) {
+        this.handleSubmit();
+      }
+    };
 
     handleSubmit() {
       this.setState({loaded: false})
@@ -38,7 +45,9 @@ class App extends React.Component {
    	render() {
   		return (
         <div>
-          <NavbarInstance onChange={this.onChange} handleSubmit={this.handleSubmit} />
+          <NavbarInstance handleKeyPress={this.handleKeyPress}
+                          onChange={this.onChange}
+                          handleSubmit={this.handleSubmit} />
           <Results {...this.state} />
           <HeatMap tweets={this.state.tweets} loaded={this.state.loaded}/>
         </div>
