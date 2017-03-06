@@ -3,9 +3,11 @@ import re
 import htmlentitydefs
 import csv
 import app.utils.regex as r
+import string
 
 from nltk.corpus import stopwords as sw
 from nltk import pos_tag
+from nltk.stem import PorterStemmer
 
 
 class Preprocessor():
@@ -15,7 +17,6 @@ class Preprocessor():
         self.emoji_happy = self.emoji_happy()
         self.emoji_sad = self.emoji_sad()
         # self.acrynoms = self.load_acrynoms()
-        self.pos_tags = None
         self.feats = {'caps': [], 'reps': [], 'NNP': [], 'UH': [], 'NPS': [],
                       'NP': [], 'NNS': [], 'PP': [], 'PP$': []}
         self.word_re = r.word_re
@@ -29,6 +30,7 @@ class Preprocessor():
         self.rep_char_re = r.rep_char_re
         self.hashtag_re = r.hashtag_re
         self.user_tag_re = r.user_tag_re
+        self.stemmer = PorterStemmer()
 
     def load_acrynoms(self):
         with open('../data/acrynom.csv', 'rb') as f:
@@ -36,96 +38,37 @@ class Preprocessor():
             slang = dict((rows[0], rows[1]) for rows in reader)
             return slang
 
-    def reset_feats(self):
-        self.feats = {k: [] for k, v in self.feats.iteritems()}
-
-    def normalise_vect(self):
-        max_val = 0
-        for v in self.feats.itervalues():
-            temp = max(map(lambda x: x[0], v))
-            if temp > max_val:
-                max_val = temp
-
-        for k, v in self.feats.iteritems():
-            self.feats[k] = map(lambda x: [0] if x[0] == 0 else [x[0]/max_val], v)
+    def pos_tags(self, tokens):
+        TAG_MAP = [ "NN", "NNP", "NNS", "VBP", "VB", "VBD", 'VBG', "VBN",
+                    "VBZ", "MD","UH", "PRP", "PRP$"]
+        tags = pos_tag(tokens)
+        return [tag[1] for tag in tags if tag[1] in TAG_MAP]
 
     def normalise(self, tokens):
-        append_neg = False
-        
         vect = []
         for t in tokens:
-            if (t in self.stopwords and
-                    not self.negation_re.match(t)):
+
+            if t in string.punctuation or t in self.stopwords:
                 continue
+                
             if not self.emoticon_re.search(t):
-                t = t.lower()
+                t = t.lower()       
+            
             t = self.rep_char_re.sub(r'\1', t)
             t = self.url_re.sub('_URL', t)
             t = self.hashtag_re.sub('_HASH', t)
             t = self.user_tag_re.sub('_USER', t)
             
+            vect.append(self.stemmer.stem(t))
 
-            # if r.punct_re.match(t):
-            #     append_neg = False
-            # if append_neg:
-            #     vect.append(t + "_NEG")
-            # else:
-            #     vect.append(t)
-            # if r.negation_re.match(t):
-            #     append_neg = True
-            vect.append(t)
+        tags = self.pos_tags(tokens)
+        vect = tags + vect
         return vect
 
     def tokenise(self, tweet):
         tweet = self.__html2unicode(tweet)
         tokens = self.word_re.findall(tweet)
-        self.pos_tags_count(tokens)
-        self.caps_intensifier(tokens)
-        self.char_repititions(tokens)
         return self.normalise(tokens)
-
-    def pos_tags_count(self, tokens):
-        useful_tags = ['NNP', 'NP', 'UH', 'NPS', 'NNS', 'PP', 'PP$']
-
-        for tag in useful_tags:
-            self.feats[tag].append([0])
-
-        tags = pos_tag(tokens)
-        idx = len(self.feats['NP']) - 1
-
-        for tag in tags:
-            if tag[1] in useful_tags:
-                self.feats[tag[1]][idx][0] += 1
-
-    def append_binary_feats(self, intensify, feat):
-        if intensify:
-            self.feats[feat].append([1])
-        else:
-            self.feats[feat].append([0])
-
-    def char_repititions(self, tokens):
-        reps = any(self.rep_char_re.search(word) for word in tokens)
-        self.append_binary_feats(reps, 'reps')
-
-    def caps_intensifier(self, tokens):
-        caps = any(self.word_has_all_caps(word) for word in tokens)
-        self.append_binary_feats(caps, 'caps')
-
-    def word_has_all_caps(self, token):
-        if (self.emoticon_re.search(token)
-            or self.punct_re.match(token)
-                or self.has_num(token)):
-            return False
-
-        if (token.upper() == token
-            and (token != 'I'
-                 and token != 'A')):
-            return True
-
-        return False
-
-    def has_num(self, s):
-        return any(i.isdigit() for i in s)
 
     def ensure_unicode(self, tweet):
         try:

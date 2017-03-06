@@ -21,44 +21,45 @@ def build_and_evaluate(X, y, X_test, y_test, outpath=None):
     # Initialise transformers/estimators
     # clf = MultinomialNB()
     # clf = SGDClassifier()
-    clf = LogisticRegression()
+    clf = LogisticRegression(C=7)
     preprocessor = Preprocessor()
     feat_comb = FeatureCombiner()
     vec = TfidfVectorizer(tokenizer=preprocess,
                           lowercase=False,
-                          ngram_range=(1, 1),
-                          max_features=5000,
+                          ngram_range=(1, 2),
+                          min_df=1,
+                          max_df=0.8,
                           norm='l2')
 
     # Build model
     print("Building model")
     tfidf_matrix = vec.fit_transform(X)
-    feat_matrix = feat_comb.transform(tfidf_matrix.todense(),
-                                      preprocessor)
+    # feat_matrix = feat_comb.transform(tfidf_matrix.todense(),
+    #                                   preprocessor)
     clf.fit(tfidf_matrix, y)
 
     # Evaluate on test set
-    preprocessor.reset_feats()
+    # preprocessor.reset_feats()
     tfidf_matrix = vec.transform(X_test)
-    feat_matrix = feat_comb.transform(tfidf_matrix.todense(),
-                                      preprocessor)
+    # feat_matrix = feat_comb.transform(tfidf_matrix.todense(),
+    #                                   preprocessor)
     y_pred = clf.predict(tfidf_matrix)
 
     print("Classification Report:\n")
     print np.mean(y_pred == y_test)
     print cm(y_test, y_pred)
-    print(clsr(y_test, y_pred, target_names=['neg', 'neut', 'pos']))
+    print(clsr(y_test, y_pred, target_names=['neg', 'pos']))
 
     # Rebuild model and save with pickle
     print("Building complete model and saving...")
-    preprocessor.reset_feats()
+    # preprocessor.reset_feats()
     tfidf_matrix = vec.fit_transform(X)
     feat_matrix = feat_comb.transform(tfidf_matrix.todense(),
                                       preprocessor)
     clf.fit(feat_matrix, y)
 
-    # np.set_printoptions(threshold=np.nan)
-    # print repr(vec.idf_)
+    np.set_printoptions(threshold=np.nan)
+    print repr(vec.idf_)
 
     if outpath:
         json.dump(vec.vocabulary_, open(outpath + 'vocabulary.json', mode='wb'))
@@ -71,8 +72,8 @@ def build_and_evaluate(X, y, X_test, y_test, outpath=None):
 
 if __name__ == "__main__":
     PATH = '../sentiment_webservice/app/'
-    TRAIN_PATH = './data/training_data.csv'
-    TEST_PATH = './data/test_data.csv'
+    TRAIN_PATH = './data/train_raw.csv'
+    TEST_PATH = './data/test_data1.csv'
 
     train = p.read_csv(TRAIN_PATH, usecols=(['class', 'text'])).dropna()
     test = p.read_csv(TEST_PATH, usecols=(['class', 'text'])).dropna()
