@@ -2,6 +2,7 @@ import React from 'react'
 import NavbarInstance from '../components/Navbar.js'
 import Results from '../components/Results.js'
 import HeatMap from '../components/HeatMap.js'
+import ResultsTable from '../components/ResultsTable.js'
 
 class App extends React.Component {
 
@@ -10,6 +11,7 @@ class App extends React.Component {
         this.state = {
         	term: '',
           loaded: true,
+          results: true,
         	tweets: [],
           pos: 0,
           neg: 0,
@@ -34,14 +36,19 @@ class App extends React.Component {
       this.setState({loaded: false})
   		fetch(`/search?term=${this.state.term}`, {method: "GET"})
   		  .then((res) => res.json())
-        .then((res) => this.setState({ tweets: res.tweets,
-                                       loaded: true,
-                                       pos: res.pos || 0,
-                                       neg: res.neg || 0,
-                                       neut: res.neut || 0 }))
+        .then((res) => {
+          res.tweets.length ? 
+            this.setState({results: true}) :
+            this.setState({results: false})
+          this.setState({tweets: res.tweets,
+                         loaded: true,
+                         pos: res.pos || 0,
+                         neg: res.neg || 0,
+                         neut: res.neut || 0 })
+        })
         .catch((err) => console.error(err));
     };
-
+    // {this.state.tweets.length ? 
    	render() {
   		return (
         <div>
@@ -50,6 +57,7 @@ class App extends React.Component {
                           handleSubmit={this.handleSubmit} />
           <Results {...this.state} />
           <HeatMap tweets={this.state.tweets} loaded={this.state.loaded}/>
+          <ResultsTable tweets={this.state.tweets} />
         </div>
   		);
    };
