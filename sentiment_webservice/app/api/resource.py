@@ -4,8 +4,10 @@ from flask import jsonify, request, g
 from flask import current_app as app
 from tweepy import AppAuthHandler, Cursor, API
 from app.utils.predict import predict
-import googlemaps
 
+
+import googlemaps
+import os
 
 def get_maps_api():
     if not hasattr(g, 'maps_api'):
@@ -62,7 +64,7 @@ def query_sentiment():
         twitter_api = get_twitter_api()
         res = {'tweets': [], 'pos': 0, 'neg': 0, 'neut': 0}
         pos, neg, neut = 0, 0, 0
-        tweets = Cursor(twitter_api.search, q=term, lang='en').items(20)
+        tweets = Cursor(twitter_api.search, q=term, lang='en').items(30)
 
         for tweet in tweets:
             pred = predict([tweet.text])

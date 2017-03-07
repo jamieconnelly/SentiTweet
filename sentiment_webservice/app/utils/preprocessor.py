@@ -1,40 +1,38 @@
 from __future__ import unicode_literals, division
+import string
 import re
 import htmlentitydefs
 import csv
 import app.utils.regex as r
 
 from nltk.corpus import stopwords as sw
+from nltk.stem import PorterStemmer
 from nltk import pos_tag
 
 
 class Preprocessor():
-
     def __init__(self):
-        self.stopwords = sw.words('english')
-        self.emoji_happy = self.emoji_happy()
-        self.emoji_sad = self.emoji_sad()
-        # self.acrynoms = self.load_acrynoms()
-        self.pos_tags = None
-        self.feats = {'caps': [], 'reps': [], 'NNP': [], 'UH': [], 'NPS': [],
-                      'NP': [], 'NNS': [], 'PP': [], 'PP$': []}
-        self.word_re = r.word_re
-        self.emoticon_re = r.emoticon_re
-        self.html_entity_digit_re = r.html_entity_digit_re
-        self.html_entity_alpha_re = r.html_entity_alpha_re
-        self.amp = r.amp
-        self.punct_re = r.punct_re
-        self.negation_re = r.negation_re
-        self.url_re = r.url_re
-        self.rep_char_re = r.rep_char_re
-        self.hashtag_re = r.hashtag_re
-        self.user_tag_re = r.user_tag_re
+        self.stopwords = list(sw.words('english'))
+        self.word_re = word_re
+        self.emoticon_re = emoticon_re
+        self.html_entity_digit_re = html_entity_digit_re
+        self.html_entity_alpha_re = html_entity_alpha_re
+        self.amp = amp
+        self.punct_re = punct_re
+        self.negation_re = negation_re
+        self.url_re = url_re
+        self.rep_char_re = rep_char_re
+        self.hashtag_re = hashtag_re
+        self.user_tag_re = user_tag_re
+        self.lexicon = self.load_lexicon()
+        self.stemmer = PorterStemmer()
+        self.feats = {'pos': [], 'neg': []}
 
-    def load_acrynoms(self):
-        with open('../data/acrynom.csv', 'rb') as f:
+    def load_lexicon(self):
+        with open('./app/data/lexicon.csv', 'rb') as f:
+        # with open('./data/lexicon.csv', 'rb') as f:
             reader = csv.reader(f)
-            slang = dict((rows[0], rows[1]) for rows in reader)
-            return slang
+            return dict((rows[2], rows[5]) for rows in reader)
 
     def reset_feats(self):
         self.feats = {k: [] for k, v in self.feats.iteritems()}
@@ -47,85 +45,57 @@ class Preprocessor():
                 max_val = temp
 
         for k, v in self.feats.iteritems():
-            self.feats[k] = map(lambda x: [0] if x[0] == 0 else [x[0]/max_val], v)
+            self.feats[k] = map(lambda x: [0] if x[0] == 0 else [(x[0] / max_val) * 20], v)
+
+    def pos_tags(self, tokens):
+        TAG_MAP = ["NN", "NNP", "NNS", "VBP", "VB",
+                   "VBD", 'VBG', "VBN", "VBZ", "MD",
+                   "UH", "PRP", "PRP$"]
+        tags = pos_tag(tokens)
+        return [tag[1] for tag in tags if tag[1] in TAG_MAP]
 
     def normalise(self, tokens):
-        append_neg = False
-        
+
         vect = []
+
         for t in tokens:
-            if (t in self.stopwords and
-                    not self.negation_re.match(t)):
+            if t in self.stopwords or t in string.punctuation:
                 continue
+
             if not self.emoticon_re.search(t):
                 t = t.lower()
+
             t = self.rep_char_re.sub(r'\1', t)
             t = self.url_re.sub('_URL', t)
             t = self.hashtag_re.sub('_HASH', t)
             t = self.user_tag_re.sub('_USER', t)
-            
 
-            # if r.punct_re.match(t):
-            #     append_neg = False
-            # if append_neg:
-            #     vect.append(t + "_NEG")
-            # else:
-            #     vect.append(t)
-            # if r.negation_re.match(t):
-            #     append_neg = True
-            vect.append(t)
+            vect.append(self.stemmer.stem(t))
+
+        tags = self.pos_tags(tokens)
+        vect = tags + vect
         return vect
 
-    def tokenise(self, tweet):
+    def tokenise(self, tweet, lexicon_feats):
         tweet = self.__html2unicode(tweet)
         tokens = self.word_re.findall(tweet)
-        self.pos_tags_count(tokens)
-        self.caps_intensifier(tokens)
-        self.char_repititions(tokens)
+        if lexicon_feats:
+            self.lexicon_lookup(tokens)
         return self.normalise(tokens)
 
-    def pos_tags_count(self, tokens):
-        useful_tags = ['NNP', 'NP', 'UH', 'NPS', 'NNS', 'PP', 'PP$']
+    def lexicon_lookup(self, tokens):
+        for k, v in self.feats.iteritems():
+            self.feats[k].append([0])
 
-        for tag in useful_tags:
-            self.feats[tag].append([0])
+        idx = len(self.feats['pos']) - 1
 
-        tags = pos_tag(tokens)
-        idx = len(self.feats['NP']) - 1
-
-        for tag in tags:
-            if tag[1] in useful_tags:
-                self.feats[tag[1]][idx][0] += 1
-
-    def append_binary_feats(self, intensify, feat):
-        if intensify:
-            self.feats[feat].append([1])
-        else:
-            self.feats[feat].append([0])
-
-    def char_repititions(self, tokens):
-        reps = any(self.rep_char_re.search(word) for word in tokens)
-        self.append_binary_feats(reps, 'reps')
-
-    def caps_intensifier(self, tokens):
-        caps = any(self.word_has_all_caps(word) for word in tokens)
-        self.append_binary_feats(caps, 'caps')
-
-    def word_has_all_caps(self, token):
-        if (self.emoticon_re.search(token)
-            or self.punct_re.match(token)
-                or self.has_num(token)):
-            return False
-
-        if (token.upper() == token
-            and (token != 'I'
-                 and token != 'A')):
-            return True
-
-        return False
-
-    def has_num(self, s):
-        return any(i.isdigit() for i in s)
+        for t in tokens:
+            t = t.lower()
+            if t in self.lexicon:
+                if self.lexicon[t] == '4':
+                    self.feats['pos'][idx][0] += 1
+                elif self.lexicon[t] == '0':
+                    self.feats['neg'][idx][0] += 1
 
     def ensure_unicode(self, tweet):
         try:
@@ -133,34 +103,6 @@ class Preprocessor():
         except UnicodeDecodeError:
             tweet = str(tweet).encode('string_escape')
             return unicode(tweet)
-
-    def emoji_happy(self):
-        try:
-            return re.compile(u'['
-                              u'\U0001f600-\U0001F60F'
-                              u'\U0001F617-\U0001F61D'
-                              u'\U0001F638-\U0001F63D'
-                              ']+', re.UNICODE)
-        except re.error:
-            return re.compile(u'('
-                              u'\ud83d[\ude00-\ude0f]|'
-                              u'\ud83d[\ude17-\ude1d]|'
-                              u'\ud83d[\ude38-\ude3d]'
-                              ')+', re.UNICODE)
-
-    def emoji_sad(self):
-        try:
-            return re.compile(u'['
-                              u'\U0001F612-\U0001F616'
-                              u'\U0001F61E-\U0001F62B'
-                              u'\U0001F63E-\U0001F63F'
-                              ']+', re.UNICODE)
-        except re.error:
-            return re.compile(u'('
-                              u'\ud83d[\ude12-\ude16]|'
-                              u'\ud83d[\ude1e-\ude2b]|'
-                              u'\ud83d[\ude3e-\ude3f]'
-                              ')+', re.UNICODE)
 
     def __html2unicode(self, s):
         """
@@ -181,7 +123,7 @@ class Preprocessor():
                     pass
         # Now the alpha versions:
         ents = set(self.html_entity_alpha_re.findall(s))
-        ents = filter((lambda x: x != r.amp), ents)
+        ents = filter((lambda x: x != amp), ents)
         for ent in ents:
             entname = ent[1:-1]
             try:
@@ -192,26 +134,91 @@ class Preprocessor():
             s = s.replace(self.amp, " and ")
         return s
 
-# tweet = self.emoji_happy.sub(r'happy', tweet)
-# tweet = self.emoji_sad.sub(r'sad', tweet)
-# words = [w for segments in words for w in segments.split()]
-# lmtzr = WordNetLemmatizer()
-# lmtzr = SnowballStemmer("english")
-# words = [lmtzr.stem(w) for w in words]
-# for i, item in enumerate(results):
-#     rep = self.acrynoms.get(item.lower())
-#     if rep is not None:
-#         results[i] = ' _ABREV'
-# words = [w for segments in words for w in segments.split()]
-# results = [w for segments in results for w in segments.split()]
-# append_neg = False
-# if r.PUNCT_RE.match(w):
-    #     append_neg = False
 
-    # if append_neg:
-    #     results.append(w + "_NEG")
-    # else:
-    #     results.append(w)
+"""
+    This file is based on the work of Christopher Potts
+    however the file has been altered and extended for
+    my purposes
+    http://sentiment.christopherpotts.net/index.html
+"""
+emoticon_string = r"""
+    (?:
+      [<>]?
+      [:;=8]                     # eyes
+      [\-o\*\']?                 # optional nose
+      [\)\]\(\[dDpP/\:\}\{@\|\\] # mouth
+      |
+      [\)\]\(\[dDpP/\:\}\{@\|\\] # mouth
+      [\-o\*\']?                 # optional nose
+      [:;=8]                     # eyes
+      [<>]?
+    )"""
 
-    # if r.NEGATION_RE.match(w):
-    #     append_neg = True
+# The components of the tokenizer:
+regex_strings = (
+    # Phone numbers:
+    r""""
+    (?:
+      (?:            # (international)
+        \+?[01]
+        [\-\s.]*
+      )?
+      (?:            # (area code)
+        [\(]?
+        \d{3}
+        [\-\s.\)]*
+      )?
+      \d{3}          # exchange
+      [\-\s.]*
+      \d{4}          # base
+    )""",
+    # Emoticons:
+    emoticon_string,
+    # HTML tags:
+    r'<[^>]+>',
+    # Twitter username:
+    r'(?:@[\w_]+)',
+    # Links
+    r'http\S+',
+    # Twitter hashtags:
+    r'(?:\#+[\w_]+[\w\'_\-]*[\w_]+)',
+    # Remaining word types:
+    r"""
+    (?:[a-z][a-z'\-_]+[a-z])       # Words with apostrophes or dashes.
+    |
+    (?:[+\-]?\d+[,/.:-]\d+[+\-]?)  # Numbers, including fractions, decimals.
+    |
+    (?:[\w_]+)                    # Words without apostrophes or dashes.
+    |
+    (?:\.(?:\s*\.){1,})            # Ellipsis dots.
+    |
+    (?:\S)                         # Everything else that isn't whitespace
+    """
+)
+
+negation_words = (
+    """
+    (?x)(?:
+    ^(?:never|no|nothing|nowhere|noone|none|not|
+        havent|hasnt|hadnt|cant|couldnt|shouldnt|
+        wont|wouldnt|dont|doesnt|didnt|isnt|arent|aint
+     )$
+    )
+    |
+    n't
+    """
+)
+
+# ######################################################################
+
+word_re = re.compile(r'(%s)' % "|".join(regex_strings), re.VERBOSE | re.I | re.UNICODE)
+emoticon_re = re.compile(regex_strings[1], re.VERBOSE | re.I | re.UNICODE)
+html_entity_digit_re = re.compile(r'&#\d+;')
+html_entity_alpha_re = re.compile(r'&\w+;')
+amp = "&amp;"
+punct_re = re.compile("^[.:;!?]$")
+negation_re = re.compile(negation_words)
+url_re = re.compile(r'http\S+')
+rep_char_re = re.compile(r'(\w)\1{3,}')
+hashtag_re = re.compile(r'(?:\#+[\w_]+[\w\'_\-]*[\w_]+)')
+user_tag_re = re.compile(r'(?:@[\w_]+)')
