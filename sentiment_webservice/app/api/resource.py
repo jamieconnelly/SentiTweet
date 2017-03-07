@@ -5,9 +5,8 @@ from flask import current_app as app
 from tweepy import AppAuthHandler, Cursor, API
 from app.utils.predict import predict
 
-
 import googlemaps
-import os
+
 
 def get_maps_api():
     if not hasattr(g, 'maps_api'):
@@ -64,22 +63,30 @@ def query_sentiment():
         twitter_api = get_twitter_api()
         res = {'tweets': [], 'pos': 0, 'neg': 0, 'neut': 0}
         pos, neg, neut = 0, 0, 0
-        tweets = Cursor(twitter_api.search, q=term, lang='en').items(30)
+        tweets = Cursor(twitter_api.search, q=term, lang='en').items(50)
+
+        print 'collected tweets'
 
         for tweet in tweets:
+            if tweet.retweeted or 'RT' in tweet.text:
+                continue
+
             pred = predict([tweet.text])
+
             if pred == [0]:
                 neg += 1
             elif pred == [2]:
                 neut += 1
             else:
                 pos += 1
+
             lat_lng = get_lat_lng(tweet.user.location)
             res['tweets'].append({'id': tweet.id,
                                   'text': tweet.text,
                                   'location': lat_lng,
                                   'polarity': pred[0]})
 
+        print len(res['tweets'])
         res['neg'] = calculate_percent(neg, len(res['tweets']))
         res['pos'] = calculate_percent(pos, len(res['tweets']))
         res['neut'] = calculate_percent(neut, len(res['tweets']))

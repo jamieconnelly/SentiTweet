@@ -18,8 +18,6 @@ class Preprocessor():
         self.html_entity_digit_re = html_entity_digit_re
         self.html_entity_alpha_re = html_entity_alpha_re
         self.amp = amp
-        self.punct_re = punct_re
-        self.negation_re = negation_re
         self.url_re = url_re
         self.rep_char_re = rep_char_re
         self.hashtag_re = hashtag_re
@@ -30,7 +28,6 @@ class Preprocessor():
 
     def load_lexicon(self):
         with open('./app/data/lexicon.csv', 'rb') as f:
-        # with open('./data/lexicon.csv', 'rb') as f:
             reader = csv.reader(f)
             return dict((rows[2], rows[5]) for rows in reader)
 
@@ -45,7 +42,7 @@ class Preprocessor():
                 max_val = temp
 
         for k, v in self.feats.iteritems():
-            self.feats[k] = map(lambda x: [0] if x[0] == 0 else [(x[0] / max_val) * 20], v)
+            self.feats[k] = map(lambda x: [0] if x[0] == 0 else [(x[0] / max_val) * 15], v)
 
     def pos_tags(self, tokens):
         TAG_MAP = ["NN", "NNP", "NNS", "VBP", "VB",
@@ -59,7 +56,7 @@ class Preprocessor():
         vect = []
 
         for t in tokens:
-            if t in self.stopwords or t in string.punctuation:
+            if t in self.stopwords:# or t in string.punctuation:
                 continue
 
             if not self.emoticon_re.search(t):
@@ -157,21 +154,21 @@ emoticon_string = r"""
 # The components of the tokenizer:
 regex_strings = (
     # Phone numbers:
-    r""""
-    (?:
-      (?:            # (international)
-        \+?[01]
-        [\-\s.]*
-      )?
-      (?:            # (area code)
-        [\(]?
-        \d{3}
-        [\-\s.\)]*
-      )?
-      \d{3}          # exchange
-      [\-\s.]*
-      \d{4}          # base
-    )""",
+    # r""""
+    # (?:
+    #   (?:            # (international)
+    #     \+?[01]
+    #     [\-\s.]*
+    #   )?
+    #   (?:            # (area code)
+    #     [\(]?
+    #     \d{3}
+    #     [\-\s.\)]*
+    #   )?
+    #   \d{3}          # exchange
+    #   [\-\s.]*
+    #   \d{4}          # base
+    # )""",
     # Emoticons:
     emoticon_string,
     # HTML tags:
@@ -185,8 +182,8 @@ regex_strings = (
     # Remaining word types:
     r"""
     (?:[a-z][a-z'\-_]+[a-z])       # Words with apostrophes or dashes.
-    |
-    (?:[+\-]?\d+[,/.:-]\d+[+\-]?)  # Numbers, including fractions, decimals.
+    # |
+    # (?:[+\-]?\d+[,/.:-]\d+[+\-]?)  # Numbers, including fractions, decimals.
     |
     (?:[\w_]+)                    # Words without apostrophes or dashes.
     |

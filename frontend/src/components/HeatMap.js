@@ -28,7 +28,7 @@ class HeatMap extends Component {
                 icon={this.getIconColour(x.polarity)}
                 key={x.id}>
           <Popup>
-            <span>{x.text}</span>
+            <div>{x.text}</div>
           </Popup>
         </Marker> 
       : null)
@@ -59,6 +59,7 @@ class HeatMap extends Component {
   }
 
   render() {
+    // console.log(this.props.tweets)
     return (
       <Map center={mapCenter} zoom={zoomLevel} worldCopyJump={true}>
         {this.props.loaded ? this.getMapTiles() : this.getLoader()}
