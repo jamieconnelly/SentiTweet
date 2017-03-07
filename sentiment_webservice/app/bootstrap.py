@@ -1,5 +1,33 @@
-import os
 from flask import Flask
+import os
+import pickle
+import json
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+from app.utils.idfs import obj_sub_idfs, pos_neg_idfs
+
+
+SUB_OBJ_CLF = './app/sub_obj_clf'
+SUB_OBJ_VOCAB = './app/sub_obj_vocab.json'
+POS_NEG_CLF = './app/pos_neg_clf'
+POS_NEG_VOCAB = './app/pos_neg_vocab.json'
+
+
+def open_model(pickle_name, vocab_name):
+
+    vocab = json.load(open(vocab_name, mode='rb'))
+
+    with open(pickle_name, 'rb') as f:
+        model = pickle.load(f)
+
+    return model, vocab
+
+
+sub_obj_clf, sub_obj_vocab = open_model(SUB_OBJ_CLF, SUB_OBJ_VOCAB)
+pos_neg_clf, pos_neg_vocab = open_model(POS_NEG_CLF, POS_NEG_VOCAB)
+_obj_sub_idfs = obj_sub_idfs
+_pos_neg_idfs = pos_neg_idfs
 
 
 def bootstrap():
