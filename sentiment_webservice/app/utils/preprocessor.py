@@ -4,10 +4,12 @@ import re
 import htmlentitydefs
 import csv
 import app.utils.regex as r
+import string
 
 from nltk.corpus import stopwords as sw
 from nltk.stem import PorterStemmer
 from nltk import pos_tag
+from nltk.stem import PorterStemmer
 
 
 class Preprocessor():
@@ -31,8 +33,11 @@ class Preprocessor():
             reader = csv.reader(f)
             return dict((rows[2], rows[5]) for rows in reader)
 
-    def reset_feats(self):
-        self.feats = {k: [] for k, v in self.feats.iteritems()}
+    def pos_tags(self, tokens):
+        TAG_MAP = [ "NN", "NNP", "NNS", "VBP", "VB", "VBD", 'VBG', "VBN",
+                    "VBZ", "MD","UH", "PRP", "PRP$"]
+        tags = pos_tag(tokens)
+        return [tag[1] for tag in tags if tag[1] in TAG_MAP]
 
     def normalise_vect(self):
         max_val = 0

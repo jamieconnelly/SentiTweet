@@ -93,6 +93,7 @@ ENV/
 node_modules/
 frontend/public/bundle.js
 */data/
+*/sub_obj_data/
 model.pickle
 vocabulary.json
 settings.py
