@@ -9,22 +9,25 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap-theme.min.css">
     <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
-    <style>
+    <!-- Style sheet -->
+    <style type="text/css">
+      tr, td {
+        width:1%;
+        white-space:nowrap;
+      }
+
       .leaflet-container {
         height: 400px;
         width: 80%;
         margin: 0 auto;
       }
-      .react-bs-table table {
+
+      .results-table {
         margin-bottom: 0;
         width: 80%;
+        max-width: 80%;
         margin-left: auto;
         margin-right: auto;
-        table-layout: fixed;
-      }
-      td {
-        width:1%;
-        /*white-space:nowrap;*/
       }
     </style>
   </head>

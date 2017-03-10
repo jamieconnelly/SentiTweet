@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { render } from 'react-dom';
+import { urlRegex, normalizeUrl } from 'get-urls';
 import { Map, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import Loader from 'react-loader';
@@ -8,7 +9,7 @@ const tiles = 'http://tile.stamen.com/terrain/{z}/{x}/{y}.jpg'
 const attr = 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 const mapCenter = [20, 0];
 const zoomLevel = 2.2;
-const ChatIcon = L.Icon.extend({ options: { iconSize: [30, 30] }});
+const ChatIcon = L.Icon.extend({ options: { iconSize: [20, 20] }});
 
 class HeatMap extends Component {
   
@@ -22,15 +23,22 @@ class HeatMap extends Component {
   }
 
   getMarkers(tweets) {
+
+    tweets.forEach(x => {
+      x.text = x.text.replace(/&amp;/g, '&')
+    })
+
     return (
-      tweets.map(x => x.location.length ? 
-        <Marker position={x.location} 
-                icon={this.getIconColour(x.polarity)}
-                key={x.id}>
-          <Popup>
-            <div>{x.text}</div>
-          </Popup>
-        </Marker> 
+      tweets.map(x => x.location.length ?
+        <div>
+          <Marker position={x.location} 
+                  icon={this.getIconColour(x.polarity)}
+                  key={x.id}>
+              <Popup>
+                <div>{x.text}</div>
+              </Popup>
+          </Marker> 
+        </div>
       : null)
     )
   }
