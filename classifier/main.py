@@ -1,13 +1,15 @@
 import sys
 import numpy as np
 import pandas as p
+import argparse
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import MultinomialNB
 from trainers import Trainer
 
+
 def objective_vs_subjective(print_tfidf=False):
-    """Objective vs Subjective tweet trainer"""
+    """Objective vs Subjective tweet trainer."""
     # Variables for subjective vs objective classifier
     OBJ_SUB_VOCAB_FILE = PATH + 'sub_obj_vocab.json'
     CLF_PCKL_NAME = PATH + 'sub_obj_clf'
@@ -16,7 +18,7 @@ def objective_vs_subjective(print_tfidf=False):
     obj_sub_test = p.read_csv('./sub_obj_data/test_ds.csv', usecols=(['class', 'text'])).dropna()
     obj_sub_train = obj_sub_train.reindex(np.random.permutation(obj_sub_train.index))
 
-    # initialise classifier and tfidf parameters
+    # initialise classifier
     clf = MultinomialNB(alpha=0.9)
     n_gram = (1, 1)
     min_df = 1
@@ -38,11 +40,8 @@ def objective_vs_subjective(print_tfidf=False):
 
 
 def positive_vs_negative(print_tfidf=False):
-    """Positive vs Negative tweet trainer"""
+    """Positive vs Negative tweet trainer."""
     # Variables for positive vs negative classifier
-    # POS_NEG_VOCAB_FILE = 'pos_neg_vocab.json'
-    # POS_NEG_PCKL_NAME = 'pos_neg_clf'
-
     CLF_PCKL_NAME = PATH + 'sub_obj_clf'
     TFIDF_PCKL_NAME = PATH + 'sub_obj_tfidf'
     LABELS = ['negative', 'positive']
@@ -50,6 +49,7 @@ def positive_vs_negative(print_tfidf=False):
     pos_neg_test = p.read_csv('./data/test_data1.csv', usecols=(['class', 'text'])).dropna()
     pos_neg_train = pos_neg_train.reindex(np.random.permutation(pos_neg_train.index))
 
+    # initialise classifier
     clf = LogisticRegression(C=7)
     n_gram = (1, 2)
     min_df = 1
@@ -72,27 +72,26 @@ def positive_vs_negative(print_tfidf=False):
     # Save model with pickle
     pos_neg_trainer.pickle_model(CLF_PCKL_NAME)
 
-    # pos_neg_trainer.pickle_model(POS_NEG_VOCAB_FILE, PATH, POS_NEG_PCKL_NAME, print_idf_=print_tfidf)
-
-
 
 if __name__ == "__main__":
 
     PATH = '../sentiment_webservice/app/'
     print_tfidf = False
 
-    if len(sys.argv) > 1:
-        if len(sys.argv) > 2:
-            if sys.argv[2] == 'tfidf':
-                print_tfidf = True
-        if sys.argv[1] == 'pos_neg':
-            positive_vs_negative(print_tfidf)
-        elif sys.argv[1] == 'obj_sub':
-            objective_vs_subjective(print_tfidf)
-        elif sys.argv[1] == 'both':
-            objective_vs_subjective(print_tfidf)
-            positive_vs_negative(print_tfidf)
-    else:
-        print 'no arguments given...'
+    parser = argparse.ArgumentParser(description='Train sentiment classifiers.')
+    parser.add_argument('-o', '--obj-sub', help='train objective vs subjective classifier', action='store_true')
+    parser.add_argument('-p', '--pos-neg', help='train positive vs negative classifier', action='store_true')
+    parser.add_argument('-t', '--tfidf', help='print tfidf matrix', action='store_true')
+    args = parser.parse_args()
 
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(1)
 
+    if args.tfidf:
+        print_tfidf = True
+
+    if args.obj_sub:
+        objective_vs_subjective(print_tfidf)
+    elif args.pos_neg:
+        positive_vs_negative(print_tfidf)

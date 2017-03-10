@@ -5,7 +5,8 @@ import json
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-from app.utils.idfs import obj_sub_idfs, pos_neg_idfs
+from app.utils.pos_neg_idfs import pos_neg_idfs
+from app.utils.obj_sub_idfs import obj_sub_idfs
 
 
 SUB_OBJ_CLF = './app/sub_obj_clf'
