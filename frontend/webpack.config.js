@@ -8,11 +8,11 @@ module.exports = {
   module: {
     loaders: [
       {
-        test: /.jsx?$/,
-        loader: 'babel-loader',
-        exclude: /node_modules/,
+        test: /\.jsx?$/,
+        exclude: /(node_modules|bower_components)/,
+        loader: 'babel',
         query: {
-          presets: ['es2015', 'react']
+          presets: ['react', 'es2015', 'stage-0'],
         }
       },
       {
