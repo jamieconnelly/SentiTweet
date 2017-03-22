@@ -1,11 +1,16 @@
 from __future__ import division
-from app.api import api
+
+import app.utils.regex as r
+import htmlentitydefs
+
+import googlemaps
+
 from flask import jsonify, request, g
 from flask import current_app as app
 from tweepy import AppAuthHandler, Cursor, API
-from app.utils.predictor import predict
 
-import googlemaps
+from app.api import api
+from app.utils.predictor import predict
 
 
 def get_maps_api():
@@ -84,9 +89,40 @@ def get_lat_lng(city):
         return []
 
 
+def html2unicode(s):
+    """ This method is courtesy of Christopher Potts
+        http://sentiment.christopherpotts.net/index.html
+        Internal method that seeks to replace all the HTML
+        entities with their corresponding unicode characters.
+    """
+    # First the digits:
+    ents = set(r.html_entity_digit_re.findall(s))
+    if len(ents) > 0:
+        for ent in ents:
+            entnum = ent[2:-1]
+            try:
+                entnum = int(entnum)
+                s = s.replace(ent, unichr(entnum))
+            except:
+                pass
+    # Now the alpha versions:
+    ents = set(r.html_entity_alpha_re.findall(s))
+    ents = filter((lambda x: x != r.amp), ents)
+    for ent in ents:
+        entname = ent[1:-1]
+        try:
+            s = s.replace(ent,
+                          unichr(htmlentitydefs.name2codepoint[entname]))
+        except:
+            pass
+        s = s.replace(r.amp, " and ")
+    return s
+
+
 @api.route('/', methods=['GET'])
 def home():
-    return 'Welocme...'
+    return 'Welcome...'
+
 
 @api.route('/search', methods=['GET'])
 def query_sentiment():
@@ -106,23 +142,25 @@ def query_sentiment():
         twitter_api = get_twitter_api()
         response = {'tweets': [], 'pos': 0, 'neg': 0, 'neut': 0}
         pos, neg, neut = 0, 0, 0
-        tweets = Cursor(twitter_api.search, q=term, lang='en').items(50)
+        tweets = Cursor(twitter_api.search, q=term, lang='en').items(100)
+
         print 'collected tweets...'
         for tweet in tweets:
             # Ignore retweets
             if tweet.retweeted or 'RT' in tweet.text:
                 continue
 
+            # Convert html characters to unicode
+            tweet_text = html2unicode(tweet.text)
+
             # Classify tweet sentiment
-            prediction = predict([tweet.text])
+            prediction = predict([tweet_text])
             if prediction == [0]:
                 neg += 1
             elif prediction == [2]:
                 neut += 1
             else:
                 pos += 1
-            
-            print 'predicted ' + str(prediction)
 
             # Attempt to find tweet location
             if tweet.coordinates:
@@ -131,11 +169,12 @@ def query_sentiment():
                 lat_lng = get_lat_lng(tweet.user.location)
 
             response['tweets'].append({'id': tweet.id,
-                                       'text': tweet.text,
+                                       'text': tweet_text,
                                        'location': lat_lng,
                                        'polarity': prediction[0]})
 
         # Calculate percentages
+        print 'calculating percentages...'
         no_of_tweets = len(response['tweets'])
         response['neg'] = calculate_percent(neg, no_of_tweets)
         response['pos'] = calculate_percent(pos, no_of_tweets)

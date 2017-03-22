@@ -1,15 +1,14 @@
 import React, { Component } from 'react';
 import { render } from 'react-dom';
-import { urlRegex, normalizeUrl } from 'get-urls';
 import { Map, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import Loader from 'react-loader';
 
-const tiles =  'http://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
+const tiles =  'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'
 const attr = '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
 // const tiles = 'http://tile.stamen.com/terrain/{z}/{x}/{y}.jpg'
 // const attr = 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>';
-const mapCenter = [10, 15];
+const mapCenter = [13, 12];
 const zoomLevel = 2;
 const ChatIcon = L.Icon.extend({ options: { iconSize: [20, 20] }});
 
@@ -25,10 +24,6 @@ class HeatMap extends Component {
   }
 
   getMarkers(tweets) {
-
-    tweets.forEach(x => {
-      x.text = x.text.replace(/&amp;/g, '&')
-    })
 
     return (
       tweets.map(x => x.location.length ?

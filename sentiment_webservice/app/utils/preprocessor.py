@@ -20,9 +20,6 @@ class Preprocessor:
         self.stopwords = list(sw.words('english'))
         self.word_re = r.word_re
         self.emoticon_re = r.emoticon_re
-        self.html_entity_digit_re = r.html_entity_digit_re
-        self.html_entity_alpha_re = r.html_entity_alpha_re
-        self.amp = r.amp
         self.url_re = r.url_re
         self.rep_char_re = r.rep_char_re
         self.hashtag_re = r.hashtag_re
@@ -42,7 +39,6 @@ class Preprocessor:
             Returns:
                 Returns list of str.
         """
-        tweet = self.__html2unicode(tweet)
         tokens = self.word_re.findall(tweet)
         if lexicon_feats:
             self._lexicon_lookup(tokens)
@@ -117,32 +113,3 @@ class Preprocessor:
                     self.feats['pos'][idx][0] += 1
                 elif self.lexicon[t] == '0':
                     self.feats['neg'][idx][0] += 1
-
-    def __html2unicode(self, s):
-        """ This method is courtesy of Christopher Potts
-            http://sentiment.christopherpotts.net/index.html
-            Internal method that seeks to replace all the HTML
-            entities with their corresponding unicode characters.
-        """
-        # First the digits:
-        ents = set(self.html_entity_digit_re.findall(s))
-        if len(ents) > 0:
-            for ent in ents:
-                entnum = ent[2:-1]
-                try:
-                    entnum = int(entnum)
-                    s = s.replace(ent, unichr(entnum))
-                except:
-                    pass
-        # Now the alpha versions:
-        ents = set(self.html_entity_alpha_re.findall(s))
-        ents = filter((lambda x: x != r.amp), ents)
-        for ent in ents:
-            entname = ent[1:-1]
-            try:
-                s = s.replace(ent,
-                              unichr(htmlentitydefs.name2codepoint[entname]))
-            except:
-                pass
-            s = s.replace(r.amp, " and ")
-        return s
