@@ -1,6 +1,5 @@
 from __future__ import unicode_literals, division
 
-import htmlentitydefs
 import csv
 import app.utils.regex as r
 
