@@ -42,8 +42,8 @@ def objective_vs_subjective(print_tfidf=False):
 def positive_vs_negative(print_tfidf=False):
     """Positive vs Negative tweet trainer."""
     # Variables for positive vs negative classifier
-    CLF_PCKL_NAME = PATH + 'sub_obj_clf'
-    TFIDF_PCKL_NAME = PATH + 'sub_obj_tfidf'
+    POS_NEG_VOCAB_FILE = PATH + 'pos_neg_vocab.json'
+    CLF_PCKL_NAME = PATH + 'pos_neg_clf'
     LABELS = ['negative', 'positive']
     pos_neg_train = p.read_csv('./data/train_raw.csv', usecols=(['class', 'text'])).dropna()
     pos_neg_test = p.read_csv('./data/test_data1.csv', usecols=(['class', 'text'])).dropna()
@@ -60,17 +60,15 @@ def positive_vs_negative(print_tfidf=False):
 
     # build model
     pos_neg_trainer.build_model(pos_neg_train['text'].values,
-                                pos_neg_train['class'].values,
-                                TFIDF_PCKL_NAME)
+                                pos_neg_train['class'].values)
 
     # evaluate model
     pos_neg_trainer.evaluate_model(pos_neg_test['text'].values,
                                    pos_neg_test['class'].values,
-                                   CLF_PCKL_NAME,
                                    labels=LABELS)
 
     # Save model with pickle
-    pos_neg_trainer.pickle_model(CLF_PCKL_NAME)
+    pos_neg_trainer.pickle_model(POS_NEG_VOCAB_FILE, CLF_PCKL_NAME, print_idf_=print_tfidf)
 
 
 if __name__ == "__main__":
