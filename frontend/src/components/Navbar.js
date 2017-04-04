@@ -16,7 +16,7 @@ class NavbarInstance extends React.Component {
                          onKeyPress={this.props.handleKeyPress}
                          type="text"
                          placeholder="Enter search term..." />
-            <Button onClick={this.props.handleSubmit} type="submit">Submit</Button>
+            <Button className='submit' onClick={this.props.handleSubmit} type="submit">Submit</Button>
           </Navbar.Form>
         </Navbar.Collapse>
       </Navbar>

@@ -12,8 +12,8 @@ class TestPreProcessor(unittest.TestCase):
         self.pre = None
 
     def test_tokeniser(self):
-        tweet = '@SomeUser: YAAAAAAY!!! &gt;:-D http://sentimentsymposium.com/'
-        tokens = ['NN', 'NN', 'NN', '_USER', ':', 'yay', '!', '!', '!', '>:-D', '_URL']
+        tweet = '@SomeUser: YAAAAAAY!!! :-D http://sentimentsymposium.com/'
+        tokens = ['NN', 'NN', 'NN', '_USER', ':', 'yay', '!', '!', '!', ':-D', '_URL']
         self.assertEqual(self.pre.tokenise(tweet, False), tokens)
         tweet = 'don\'t she\'d it\'s'
         tokens = ['NN', 'VBD', 'NN', 'don\'t', 'she\'d', 'it\'']

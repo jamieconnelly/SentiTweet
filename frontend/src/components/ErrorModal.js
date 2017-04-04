@@ -10,7 +10,7 @@ class ErrorModal extends React.Component {
           <Modal.Header>
             <Modal.Title>An error has occurred...</Modal.Title>
           </Modal.Header>
-          <Modal.Body>
+          <Modal.Body className='error-message'>
             {`${this.props.error.name}: ${this.props.error.message}`}
           </Modal.Body>
           <Modal.Footer>

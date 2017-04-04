@@ -55,7 +55,7 @@ class ResultsTable extends React.Component {
           {this.getTableHead()}
           <tbody>
           {results.map(x => (
-              <tr style={{'backgroundColor': x.colour}}>
+              <tr key={x.id} style={{'backgroundColor': x.colour}}>
                 <td>{x.id}</td>
                 <td>{x.text}</td>
                 <td>{x.polarity}</td>
