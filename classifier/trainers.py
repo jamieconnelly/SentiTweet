@@ -54,15 +54,16 @@ class Trainer():
         print "Confusion matrix:\n {}".format(cm(y_test, y_pred))
         print "Classification Report:\n {}".format(clsr(y_test, y_pred, target_names=[labels[0], labels[1]]))
 
-    def pickle_model(self, vocab_file_name, pickle_name, print_idf_=False):
+    def pickle_model(self, vocab_file_name, pickle_name, print_idf_=False, save=False):
 
-        json.dump(self.tfidf_vec.vocabulary_, open(vocab_file_name, mode='wb'))
+        if save:
+            json.dump(self.tfidf_vec.vocabulary_, open(vocab_file_name, mode='wb'))
 
-        with open(pickle_name, 'wb') as f:
-            pickle.dump(self.clf, f)
+            with open(pickle_name, 'wb') as f:
+                pickle.dump(self.clf, f)
 
-        print "Model written out to {}".format(pickle_name)
-        print "Tfidf vocab written out to {}".format(vocab_file_name)
+            print "Model written out to {}".format(pickle_name)
+            print "Tfidf vocab written out to {}".format(vocab_file_name)
 
         if print_idf_:
             np.set_printoptions(threshold=np.nan)

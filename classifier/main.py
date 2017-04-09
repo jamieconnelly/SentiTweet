@@ -8,7 +8,7 @@ from sklearn.naive_bayes import MultinomialNB
 from trainers import Trainer
 
 
-def objective_vs_subjective(print_tfidf=False):
+def objective_vs_subjective(print_tfidf=False, save=False):
     """Objective vs Subjective tweet trainer."""
     # Variables for subjective vs objective classifier
     OBJ_SUB_VOCAB_FILE = PATH + 'sub_obj_vocab.json'
@@ -36,10 +36,10 @@ def objective_vs_subjective(print_tfidf=False):
                                   labels=LABELS)
 
     # Save model with pickle
-    ob_sub_trainer.pickle_model(OBJ_SUB_VOCAB_FILE, CLF_PCKL_NAME, print_idf_=print_tfidf)
+    ob_sub_trainer.pickle_model(OBJ_SUB_VOCAB_FILE, CLF_PCKL_NAME, print_idf_=print_tfidf, save=save)
 
 
-def positive_vs_negative(print_tfidf=False):
+def positive_vs_negative(print_tfidf=False, save=False):
     """Positive vs Negative tweet trainer."""
     # Variables for positive vs negative classifier
     POS_NEG_VOCAB_FILE = PATH + 'pos_neg_vocab.json'
@@ -68,18 +68,20 @@ def positive_vs_negative(print_tfidf=False):
                                    labels=LABELS)
 
     # Save model with pickle
-    pos_neg_trainer.pickle_model(POS_NEG_VOCAB_FILE, CLF_PCKL_NAME, print_idf_=print_tfidf)
+    pos_neg_trainer.pickle_model(POS_NEG_VOCAB_FILE, CLF_PCKL_NAME, print_idf_=print_tfidf, save=save)
 
 
 if __name__ == "__main__":
 
     PATH = '../sentiment_webservice/app/'
     print_tfidf = False
+    save = False
 
     parser = argparse.ArgumentParser(description='Train sentiment classifiers.')
     parser.add_argument('-o', '--obj-sub', help='train objective vs subjective classifier', action='store_true')
     parser.add_argument('-p', '--pos-neg', help='train positive vs negative classifier', action='store_true')
     parser.add_argument('-t', '--tfidf', help='print tfidf matrix', action='store_true')
+    parser.add_argument('-s', '--save', help='save vocabulary and model', action='store_true')
     args = parser.parse_args()
 
     if len(sys.argv) == 1:
@@ -89,7 +91,10 @@ if __name__ == "__main__":
     if args.tfidf:
         print_tfidf = True
 
+    if args.save:
+        save = True
+
     if args.obj_sub:
-        objective_vs_subjective(print_tfidf)
+        objective_vs_subjective(print_tfidf, save)
     elif args.pos_neg:
-        positive_vs_negative(print_tfidf)
+        positive_vs_negative(print_tfidf, save)

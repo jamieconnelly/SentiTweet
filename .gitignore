@@ -90,6 +90,7 @@ ENV/
 
 .DS_Store
 *.pyc
+.venv
 node_modules/
 frontend/public/bundle.js
 */data/
@@ -106,12 +107,9 @@ uwsgi.pid
 */sentiment_webservice/app/pos_neg_clf
 */pos_neg.txt
 */obj_sub.txt
-
-
-sentiment_webservice/app/sub_obj_vocab\.json
-
+ip.txt
+SentiVis.pem
+sentiment_webservice/app/sub_obj_vocab.json
 sentiment_webservice/app/pos_neg_clf
-
-sentiment_webservice/app/pos_neg_vocab\.json
-
+sentiment_webservice/app/pos_neg_vocab.json
 sentiment_webservice/app/sub_obj_clf
